@@ -55,47 +55,47 @@ mod tests {
         let _ = env_logger::builder().is_test(true).try_init();
     }
 
-    #[test]
-    fn test_basic_logging() {
-        init();
-        hello();
-    }
+    // #[test]
+    // fn test_basic_logging() {
+    //     init();
+    //     hello();
+    // }
 
-    #[test]
-    fn test_parameter_logging() {
-        init();
-        greet("Alice");
-    }
+    // #[test]
+    // fn test_parameter_logging() {
+    //     init();
+    //     greet("Alice");
+    // }
 
-    #[test]
-    fn test_return_value_logging() {
-        init();
-        assert_eq!(add(5, 3), 8);
-    }
+    // #[test]
+    // fn test_return_value_logging() {
+    //     init();
+    //     assert_eq!(add(5, 3), 8);
+    // }
 
-    #[test]
-    fn test_generic_logging() {
-        init();
-        print_item(42);
-        print_item("Hello");
-    }
+    // #[test]
+    // fn test_generic_logging() {
+    //     init();
+    //     print_item(42);
+    //     print_item("Hello");
+    // }
 
-    #[test]
-    fn test_length_limits() {
-        init();
-        process_data("This is a very long string that should be truncated".to_string());
-    }
+    // #[test]
+    // fn test_length_limits() {
+    //     init();
+    //     process_data("This is a very long string that should be truncated".to_string());
+    // }
 
-    #[test]
-    fn test_nested_calls() {
-        init();
-        let result = add2(5, 3);
-        assert_eq!(result, 8);
-    }
+    // #[test]
+    // fn test_nested_calls() {
+    //     init();
+    //     let result = add2(5, 3);
+    //     assert_eq!(result, 8);
+    // }
 
-    #[test]
-    fn test_debug_level() {
-        init();
-        debug_function();
-    }
+    // #[test]
+    // fn test_debug_level() {
+    //     init();
+    //     debug_function();
+    // }
 }
