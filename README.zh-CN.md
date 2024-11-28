@@ -2,18 +2,21 @@
 
 简体中文 | [English](README.md)
 
-一个用于跟踪 Rust 函数调用的过程宏。
+一个用于函数日志记录的 Rust 属性宏，具有可配置选项。
 
 ## 特性
 
-- 自动跟踪函数的进入和退出
-- 记录函数参数和返回值
-- 轻松集成到 Rust 标准日志系统
-- 最小的性能开销
+- 记录函数的进入和退出
+- 参数值日志记录
+- 返回值日志记录
+- 泛型类型支持
+- 可配置的日志级别
+- 输出长度限制
+- 支持嵌套函数调用
 
 ## 安装
 
-在 `Cargo.toml` 中添加以下依赖：
+在 `Cargo.toml` 中添加：
 
 ```toml
 [dependencies]
@@ -22,20 +25,95 @@ funlog = "0.1.0"
 
 ## 使用方法
 
-```rust
-use funlog::trace;
+### 基础日志记录
 
-#[trace]
-fn example_function(x: i32) -> i32 {
-    x + 1
+```rust
+use funlog::funlog;
+
+#[funlog]
+fn hello() {
+    println!("Hello!");
 }
 ```
 
-这将自动记录函数的进入和退出，包括参数和返回值。
+### 参数日志记录
 
-## 配置
+```rust
+#[funlog(param)]
+fn greet(name: &str) {
+    println!("Hello, {}!", name);
+}
+```
 
-该宏使用 Rust 标准的 `log` crate。请确保在您的应用程序中初始化一个日志记录器（例如 `env_logger`）。
+### 返回值日志记录
+
+```rust
+#[funlog(ret)]
+fn add(a: i32, b: i32) -> i32 {
+    a + b
+}
+```
+
+### 泛型函数日志记录
+
+```rust
+#[funlog(param, gener)]
+fn print_item<T: std::fmt::Display + std::fmt::Debug>(item: T) {
+    println!("{}", item);
+}
+```
+
+### 长度限制
+
+限制记录的参数和返回值的长度：
+
+```rust
+#[funlog(param="10", ret="20")]
+fn process_data(data: String) -> String {
+    data.repeat(2)
+}
+```
+
+### 日志级别
+
+指定不同的日志级别（debug、info、warn、error、trace）：
+
+```rust
+#[funlog(debug)]
+fn debug_function() {
+    println!("Debug function called");
+}
+```
+
+### 嵌套函数调用
+
+跟踪函数调用链：
+
+```rust
+#[funlog(param, ret)]
+fn add1(a: i32, b: i32) -> i32 {
+    a + b
+}
+
+#[funlog(param, ret)]
+fn add2(a: i32, b: i32) -> i32 {
+    add1(a, b)
+}
+```
+
+## 配置选项
+
+- `param` - 启用参数日志记录
+- `ret` - 启用返回值日志记录
+- `gener` - 启用泛型类型信息日志记录
+- `param="n"` - 将参数日志长度限制为 n 个字符
+- `ret="n"` - 将返回值日志长度限制为 n 个字符
+- 日志级别：
+  - `debug`
+  - `info`（默认）
+  - `warn`
+  - `error`
+  - `trace`
 
 ## 许可证
 
