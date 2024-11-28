@@ -1,0 +1,23 @@
+[package]
+name = "tlog"
+version = "0.1.0"
+edition = "2021"
+description = "A procedural macro for tracing Rust function calls"
+authors = ["Levy Gu <32436334@qq.com>"]
+license = "MIT"
+repository = "https://github.com/koory1st/tlog"
+keywords = ["logging", "tracing", "proc-macro"]
+categories = ["development-tools::debugging"]
+
+[lib]
+proc-macro = true
+
+[dependencies]
+log = "0.4"
+proc-macro2 = "1.0"
+quote = "1.0"
+syn = { version = "2.0", features = ["full", "extra-traits"] }
+once_cell = "1.18"
+
+[dev-dependencies]
+env_logger = "0.10"
