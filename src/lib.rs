@@ -4,6 +4,7 @@ use syn::{parse_macro_input, ItemFn, Meta, Lit, Expr, ExprLit, FnArg};
 use syn::punctuated::Punctuated;
 use syn::token::Comma;
 
+
 /// Configuration for the funlog macro
 #[derive(Default)]
 struct FunlogConfig {
