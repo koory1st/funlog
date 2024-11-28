@@ -1,4 +1,4 @@
-# tlog
+# funlog
 
 简体中文 | [English](README.md)
 
@@ -17,13 +17,13 @@
 
 ```toml
 [dependencies]
-tlog = "0.1.0"
+funlog = "0.1.0"
 ```
 
 ## 使用方法
 
 ```rust
-use tlog::trace;
+use funlog::trace;
 
 #[trace]
 fn example_function(x: i32) -> i32 {

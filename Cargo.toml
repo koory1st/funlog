@@ -1,11 +1,11 @@
 [package]
-name = "tlog"
+name = "funlog"
 version = "0.1.0"
 edition = "2021"
 description = "A procedural macro for tracing Rust function calls"
 authors = ["Levy Gu <32436334@qq.com>"]
 license = "MIT"
-repository = "https://github.com/koory1st/tlog"
+repository = "https://github.com/koory1st/funlog"
 keywords = ["logging", "tracing", "proc-macro"]
 categories = ["development-tools::debugging"]
 

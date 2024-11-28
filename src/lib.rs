@@ -4,9 +4,9 @@ use syn::{parse_macro_input, ItemFn, Meta, Lit, Expr, ExprLit, FnArg};
 use syn::punctuated::Punctuated;
 use syn::token::Comma;
 
-/// Configuration for the tlog macro
+/// Configuration for the funlog macro
 #[derive(Default)]
-struct TlogConfig {
+struct FunlogConfig {
     param: bool,        // Whether to log parameters
     ret: bool,         // Whether to log return value
     param_limit: Option<usize>,  // Parameter output length limit
@@ -15,9 +15,9 @@ struct TlogConfig {
     log_level: Option<String>, // Log level (info, debug, warn, error, trace)
 }
 
-impl TlogConfig {
+impl FunlogConfig {
     fn from_meta(meta: Punctuated<Meta, Comma>) -> Self {
-        let mut config = TlogConfig::default();
+        let mut config = FunlogConfig::default();
         
         for meta_item in meta {
             match meta_item {
@@ -63,11 +63,11 @@ impl TlogConfig {
 }
 
 #[proc_macro_attribute]
-pub fn tlog(attr: TokenStream, item: TokenStream) -> TokenStream {
+pub fn funlog(attr: TokenStream, item: TokenStream) -> TokenStream {
     let attr_meta = parse_macro_input!(attr with Punctuated::<Meta, Comma>::parse_terminated);
     let input = parse_macro_input!(item as ItemFn);
     
-    let config = TlogConfig::from_meta(attr_meta);
+    let config = FunlogConfig::from_meta(attr_meta);
     let fn_name = &input.sig.ident;
     let fn_generics = &input.sig.generics;
     let fn_inputs = &input.sig.inputs;

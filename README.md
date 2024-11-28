@@ -1,4 +1,4 @@
-# tlog
+# funlog
 
 [简体中文](README.zh-CN.md) | English
 
@@ -17,21 +17,19 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-tlog = "0.1.0"
+funlog = "0.1.0"
 ```
 
 ## Usage
 
 ```rust
-use tlog::trace;
+use funlog::trace;
 
 #[trace]
 fn example_function(x: i32) -> i32 {
     x + 1
 }
 ```
-
-This will automatically log function entry and exit with parameters and return values.
 
 ## Configuration
 
