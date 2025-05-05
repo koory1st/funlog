@@ -1,230 +1,49 @@
+use log::debug;
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, ItemFn, Meta, Lit, Expr, ExprLit, FnArg, PatType, ReturnType, Type, TypePath, Path, PathSegment};
 use syn::punctuated::Punctuated;
 use syn::token::Comma;
-
-/// Configuration for the funlog macro
-#[derive(Default)]
-struct FunlogConfig {
-    param: bool,        // Whether to log parameters
-    ret: bool,         // Whether to log return value
-    param_limit: Option<usize>,  // Parameter output length limit
-    ret_limit: Option<usize>,    // Return value output length limit
-    gener: bool,       // Whether to show generic type parameters
-    log_level: Option<String>, // Log level (info, debug, warn, error, trace)
-}
-
-impl FunlogConfig {
-    fn from_meta(meta: Punctuated<Meta, Comma>) -> Self {
-        let mut config = FunlogConfig::default();
-        
-        for meta_item in meta {
-            match meta_item {
-                Meta::Path(path) => {
-                    if let Some(ident) = path.get_ident() {
-                        let name = ident.to_string();
-                        match name.as_str() {
-                            "param" => config.param = true,
-                            "ret" => config.ret = true,
-                            "gener" => config.gener = true,
-                            level @ ("info" | "debug" | "warn" | "error" | "trace") => {
-                                config.log_level = Some(level.to_string());
-                            }
-                            _ => {}
-                        }
-                    }
-                }
-                Meta::NameValue(nv) => {
-                    let ident = nv.path.get_ident().unwrap().to_string();
-                    match ident.as_str() {
-                        "param" => {
-                            if let Expr::Lit(ExprLit { lit: Lit::Str(lit_str), .. }) = nv.value {
-                                if let Ok(val) = lit_str.value().parse() {
-                                    config.param_limit = Some(val);
-                                }
-                            }
-                        }
-                        "ret" => {
-                            if let Expr::Lit(ExprLit { lit: Lit::Str(lit_str), .. }) = nv.value {
-                                if let Ok(val) = lit_str.value().parse() {
-                                    config.ret_limit = Some(val);
-                                }
-                            }
-                        }
-                        _ => {}
-                    }
-                }
-                _ => {}
-            }
-        }
-        config
-    }
-}
-
-fn is_result_type(ty: &Type) -> bool {
-    if let Type::Path(TypePath { path: Path { segments, .. }, .. }) = ty {
-        if let Some(PathSegment { ident, .. }) = segments.last() {
-            return ident == "Result";
-        }
-    }
-    false
-}
-
-fn is_option_type(ty: &Type) -> bool {
-    if let Type::Path(TypePath { path: Path { segments, .. }, .. }) = ty {
-        if let Some(PathSegment { ident, .. }) = segments.last() {
-            return ident == "Option";
-        }
-    }
-    false
-}
-
-fn get_inner_type_name(ty: &Type) -> String {
-    if let Type::Path(TypePath { path: Path { segments, .. }, .. }) = ty {
-        if let Some(PathSegment { arguments, .. }) = segments.last() {
-            if let syn::PathArguments::AngleBracketed(args) = arguments {
-                if let Some(arg) = args.args.first() {
-                    if let syn::GenericArgument::Type(inner_ty) = arg {
-                        if let Type::Path(TypePath { path: Path { segments: inner_segments, .. }, .. }) = inner_ty {
-                            if let Some(inner_seg) = inner_segments.last() {
-                                return inner_seg.ident.to_string();
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    "<unknown>".to_string()
-}
+use syn::{parse_macro_input, FnArg, ItemFn, PatType};
 
 #[proc_macro_attribute]
 pub fn funlog(attr: TokenStream, item: TokenStream) -> TokenStream {
-    let attr_meta = parse_macro_input!(attr with Punctuated::<Meta, Comma>::parse_terminated);
-    let mut input = parse_macro_input!(item as ItemFn);
-    
-    let config = FunlogConfig::from_meta(attr_meta);
-    let fn_name = &input.sig.ident;
-    let fn_inputs = &input.sig.inputs;
-    let fn_output = &input.sig.output;
-    let fn_block = &input.block;
-    let vis = &input.vis;
-    
-    // Generate parameter logging code
-    let mut param_names = Vec::new();
-    let mut param_types = Vec::new();
-    
-    for param in fn_inputs.iter() {
-        if let FnArg::Typed(PatType { pat, ty, .. }) = param {
-            let param_name = &pat;
-            param_names.push(quote! { #param_name });
-            param_types.push(ty);
+    let func = parse_macro_input!(item as ItemFn);
+    // dbg!(&func);
+    let func_vis = &func.vis; // pub
+    let func_block = &func.block; // 函数主体实现部分{}
+
+    let func_decl = &func.sig; // 函数申明
+    let func_name = &func_decl.ident; // 函数名
+    let func_name_str = func_name.to_string();
+    let func_generics = &func_decl.generics; // 函数泛型
+    let func_inputs: &Punctuated<FnArg, Comma> = &func_decl.inputs; // 函数输入参数
+    let func_output = &func_decl.output; // 函数返回
+
+    get_input(func_inputs);
+
+    quote! {
+        #func_vis fn #func_name() {
+            std::println!("{} start", #func_name_str);
+            #func_block
+            std::println!("{} end", #func_name_str);
         }
     }
-    
-    // Determine which log macro to use
-    let log_macro = match config.log_level.as_deref() {
-        Some("debug") => quote! { log::debug },
-        Some("warn") => quote! { log::warn },
-        Some("error") => quote! { log::error },
-        Some("trace") => quote! { log::trace },
-        _ => quote! { log::info },
-    };
-    
-    let param_logging = if config.param {
-        let param_logs = param_names.iter().zip(param_types.iter()).map(|(name, _)| {
-            quote! {
-                format!("{}: {:?}", 
-                    stringify!(#name),
-                    #name
-                )
-            }
-        });
-        
-        quote! {
-            let params = vec![#(#param_logs),*].join(", ");
-            let param_str = if params.is_empty() { "()".to_string() } else { format!("({})", params) };
-        }
-    } else {
-        quote! {
-            let param_str = "()".to_string();
-        }
-    };
+    .into()
+}
 
-    // Get return type info
-    let (_return_type, is_result, is_option) = if let ReturnType::Type(_, ty) = fn_output {
-        let type_name = get_inner_type_name(ty);
-        let is_res = is_result_type(ty);
-        let is_opt = is_option_type(ty);
-        (type_name, is_res, is_opt)
-    } else {
-        ("()".to_string(), false, false)
-    };
-    
-    let return_logging = if config.ret {
-        if is_result {
-            quote! {
-                let ret_str = match &__result {
-                    Ok(v) => format!("->Ok({:?})", v),
-                    Err(e) => format!("->Err({:?})", e),
-                };
-            }
-        } else if is_option {
-            quote! {
-                let ret_str = match &__result {
-                    Some(v) => format!("->Some({:?})", v),
-                    None => "->None".to_string(),
-                };
-            }
-        } else {
-            quote! {
-                let ret_str = format!("->{:?}", __result);
+fn get_input(func_inputs: &Punctuated<FnArg, Comma>) {
+    for input in func_inputs.iter().filter_map(|arg| match arg {
+        FnArg::Typed(PatType { pat, ty, .. }) => Some((pat, ty)),
+        _ => None,
+    }) {
+        let (pat, ty) = input;
+        if let syn::Pat::Ident(pat_ident) = pat.as_ref() {
+            println!("Ident: {}", pat_ident.ident);
+        }
+        if let syn::Type::Path(type_path) = ty.as_ref() {
+            if let Some(segment) = type_path.path.segments.last() {
+                println!("Type Ident: {}", segment.ident);
             }
         }
-    } else {
-        quote! {
-            let ret_str = String::new();
-        }
-    };
-    
-    let mut new_block = quote! {
-        {
-            // Log function entry
-            let file = file!();
-            let line = line!();
-            
-            #param_logging
-            
-            let begin_msg = format!("{}:{} {}::{}{} begin", 
-                file, 
-                line,
-                module_path!(),
-                stringify!(#fn_name),
-                param_str
-            );
-            #log_macro!("{}", begin_msg);
-            
-            // Execute the original function
-            let __result = #fn_block;
-            
-            // Log return value and function end
-            #return_logging
-            
-            let end_msg = format!("{}:{} {}::{}{}{} end", 
-                file, 
-                line,
-                module_path!(),
-                stringify!(#fn_name),
-                param_str,
-                ret_str
-            );
-            #log_macro!("{}", end_msg);
-            
-            __result
-        }
-    };
-
-    input.block = syn::parse2(new_block).unwrap();
-    TokenStream::from(quote! { #input })
+    }
 }
