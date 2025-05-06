@@ -1,9 +1,10 @@
 use log::debug;
 use proc_macro::TokenStream;
-use quote::quote;
+use proc_macro2::Ident;
+use quote::{format_ident, quote};
 use syn::punctuated::Punctuated;
 use syn::token::Comma;
-use syn::{parse_macro_input, FnArg, ItemFn, PatType};
+use syn::{parse_macro_input, FnArg, ItemFn, Pat, PatIdent, PatType};
 
 #[proc_macro_attribute]
 pub fn funlog(attr: TokenStream, item: TokenStream) -> TokenStream {
@@ -15,35 +16,37 @@ pub fn funlog(attr: TokenStream, item: TokenStream) -> TokenStream {
     let func_decl = &func.sig; // 函数申明
     let func_name = &func_decl.ident; // 函数名
     let func_name_str = func_name.to_string();
+    let inner_func_name = format_ident!("__{}__", func_name);
     let func_generics = &func_decl.generics; // 函数泛型
     let func_inputs: &Punctuated<FnArg, Comma> = &func_decl.inputs; // 函数输入参数
     let func_output = &func_decl.output; // 函数返回
 
-    get_input(func_inputs);
+    let args = get_args(func_inputs);
 
     quote! {
-        #func_vis fn #func_name() {
+        fn #inner_func_name(#func_inputs) {
+
+        }
+        #func_vis fn #func_name(#func_inputs) {
             std::println!("{} start", #func_name_str);
-            #func_block
+            #inner_func_name(#(#args,) *);
             std::println!("{} end", #func_name_str);
         }
     }
     .into()
 }
 
-fn get_input(func_inputs: &Punctuated<FnArg, Comma>) {
+fn get_args(func_inputs: &Punctuated<FnArg, Comma>) -> Vec<Ident> {
+    let mut args = Vec::new();
     for input in func_inputs.iter().filter_map(|arg| match arg {
         FnArg::Typed(PatType { pat, ty, .. }) => Some((pat, ty)),
         _ => None,
     }) {
         let (pat, ty) = input;
-        if let syn::Pat::Ident(pat_ident) = pat.as_ref() {
-            println!("Ident: {}", pat_ident.ident);
-        }
-        if let syn::Type::Path(type_path) = ty.as_ref() {
-            if let Some(segment) = type_path.path.segments.last() {
-                println!("Type Ident: {}", segment.ident);
-            }
-        }
+        args.push(match pat.as_ref() {
+            Pat::Ident(PatIdent { ident, .. }) => ident.clone(),
+            _ => panic!("no ident"),
+        });
     }
+    args
 }
