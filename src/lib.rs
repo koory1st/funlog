@@ -24,12 +24,12 @@ pub fn funlog(attr: TokenStream, item: TokenStream) -> TokenStream {
     let args = get_args(func_inputs);
 
     quote! {
-        fn #inner_func_name(#func_inputs) {
-
+        fn #inner_func_name(#func_inputs) #func_output {
+            #func_block
         }
-        #func_vis fn #func_name(#func_inputs) {
+        #func_vis fn #func_name(#func_inputs) #func_output {
             std::println!("{} start", #func_name_str);
-            #inner_func_name(#(#args,) *);
+            let output = #inner_func_name(#(#args,) *);
             std::println!("{} end", #func_name_str);
         }
     }
