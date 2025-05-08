@@ -8,6 +8,17 @@ use syn::{parse_macro_input, FnArg, ItemFn, Pat, PatIdent, PatType};
 
 #[proc_macro_attribute]
 pub fn funlog(attr: TokenStream, item: TokenStream) -> TokenStream {
+    let is_debug = if cfg!(debug_assertions) {
+        true
+    } else {
+        false
+    };
+
+    // when not debug, just return the original function
+    if !is_debug {
+        return item;
+    }
+
     let func = parse_macro_input!(item as ItemFn);
     // dbg!(&func);
     let func_vis = &func.vis; // pub
