@@ -8,11 +8,7 @@ use syn::{parse_macro_input, FnArg, ItemFn, Pat, PatIdent, PatType};
 
 #[proc_macro_attribute]
 pub fn funlog(attr: TokenStream, item: TokenStream) -> TokenStream {
-    let is_debug = if cfg!(debug_assertions) {
-        true
-    } else {
-        false
-    };
+    let is_debug = if cfg!(debug_assertions) { true } else { false };
 
     // when not debug, just return the original function
     if !is_debug {
@@ -33,6 +29,7 @@ pub fn funlog(attr: TokenStream, item: TokenStream) -> TokenStream {
     let func_output = &func_decl.output; // 函数返回
 
     let args = get_args(func_inputs);
+    let end_token = output_end(func_output, &func_name_str);
 
     quote! {
         fn #inner_func_name(#func_inputs) #func_output {
@@ -41,7 +38,8 @@ pub fn funlog(attr: TokenStream, item: TokenStream) -> TokenStream {
         #func_vis fn #func_name(#func_inputs) #func_output {
             std::println!("{} start", #func_name_str);
             let output = #inner_func_name(#(#args,) *);
-            std::println!("{} end", #func_name_str);
+            #end_token
+            output
         }
     }
     .into()
@@ -60,4 +58,19 @@ fn get_args(func_inputs: &Punctuated<FnArg, Comma>) -> Vec<Ident> {
         });
     }
     args
+}
+
+fn output_end(func_output: &syn::ReturnType, func_name_str: &str) -> proc_macro2::TokenStream {
+    match func_output {
+        syn::ReturnType::Default => {
+            quote! {
+                std::println!("{} end", #func_name_str);
+            }
+        }
+        _ => {
+            quote! {
+                std::println!("{} end -> {}", #func_name_str, output);
+            }
+        }
+    }
 }
