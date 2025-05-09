@@ -1,6 +1,7 @@
 use log::debug;
 use proc_macro::TokenStream;
 use proc_macro2::Ident;
+use proc_macro2::TokenStream as TokenStream2;
 use quote::{format_ident, quote};
 use syn::punctuated::Punctuated;
 use syn::token::Comma;
@@ -30,13 +31,14 @@ pub fn funlog(attr: TokenStream, item: TokenStream) -> TokenStream {
 
     let args = get_args(func_inputs);
     let end_token = output_end(func_output, &func_name_str);
+    let start_token = output_start(&args, &func_name_str);
 
     quote! {
         fn #inner_func_name(#func_inputs) #func_output {
             #func_block
         }
         #func_vis fn #func_name(#func_inputs) #func_output {
-            std::println!("{} start", #func_name_str);
+            #start_token
             let output = #inner_func_name(#(#args,) *);
             #end_token
             output
@@ -60,16 +62,26 @@ fn get_args(func_inputs: &Punctuated<FnArg, Comma>) -> Vec<Ident> {
     args
 }
 
-fn output_end(func_output: &syn::ReturnType, func_name_str: &str) -> proc_macro2::TokenStream {
+fn output_start(args: &Vec<Ident>, func_name_str: &String) -> TokenStream2 {
+    let aaa = args.iter().map(|arg| {
+        let arg_str = arg.to_string();
+        format!("{}:{{{}}}", arg_str, arg_str)
+    }).collect::<Vec<String>>().join(", ");
+    quote! {
+        std::println!("{}({}) start", #func_name_str, #aaa);
+    }
+}
+
+fn output_end(func_output: &syn::ReturnType, func_name_str: &str) -> TokenStream2 {
     match func_output {
         syn::ReturnType::Default => {
             quote! {
-                std::println!("{} end", #func_name_str);
+                std::println!("{}() end", #func_name_str);
             }
         }
         _ => {
             quote! {
-                std::println!("{} end -> {}", #func_name_str, output);
+                std::println!("{}() end -> {}", #func_name_str, output);
             }
         }
     }

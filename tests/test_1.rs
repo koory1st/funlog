@@ -18,9 +18,9 @@ mod tests {
         let mut output = String::new();
         buf.read_to_string(&mut output).unwrap();
 
-        assert_eq!(&output[..], r#"hello start
+        assert_eq!(&output[..], r#"hello() start
 Hello!
-hello end
+hello() end
 "#);
     }
 }
