@@ -64,12 +64,16 @@ fn get_args(func_inputs: &Punctuated<FnArg, Comma>) -> Vec<Ident> {
 }
 
 fn output_start(args: &Vec<Ident>, func_name_str: &String) -> TokenStream2 {
-    let aaa = args.iter().map(|arg| {
-        let arg_str = arg.to_string();
-        format!("{}:{{{}}}", arg_str, arg_str)
-    }).collect::<Vec<String>>().join(", ");
+    let aaa = args
+        .iter()
+        .map(|arg| {
+            let arg_str = arg.to_string();
+            format!("{}:{{{}}}", arg_str, arg_str)
+        })
+        .collect::<Vec<String>>()
+        .join(", ");
     quote! {
-        log::trace!("{}({}) start", #func_name_str, #aaa);
+        log::debug!("{}({}) start", #func_name_str, #aaa);
     }
 }
 
@@ -77,12 +81,12 @@ fn output_end(func_output: &syn::ReturnType, func_name_str: &str) -> TokenStream
     match func_output {
         syn::ReturnType::Default => {
             quote! {
-                std::println!("{}() end", #func_name_str);
+                log::debug!("{}() end", #func_name_str);
             }
         }
         _ => {
             quote! {
-                std::println!("{}() end -> {}", #func_name_str, output);
+                log::debug!("{}() end -> {}", #func_name_str, output);
             }
         }
     }

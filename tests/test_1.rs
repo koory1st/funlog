@@ -1,26 +1,30 @@
 use funlog::funlog;
 use gag::BufferRedirect;
+use log::info;
 use std::io::Read;
 
 #[funlog]
 fn hello() {
     println!("Hello!");
 }
-
+fn log_something() {
+    info!("something");
+}
 #[cfg(test)]
 mod tests {
     use super::*;
+    use mock_logger::MockLogger;
 
     #[test]
     fn test_basic_logging() {
-        let mut buf = BufferRedirect::stdout().unwrap();
+        mock_logger::init();
         hello();
-        let mut output = String::new();
-        buf.read_to_string(&mut output).unwrap();
-
-        assert_eq!(&output[..], r#"hello() start
-Hello!
-hello() end
-"#);
+        MockLogger::entries(|entries| {
+            assert_eq!(entries.len(), 2);
+            assert_eq!(entries[0].level, log::Level::Debug);
+            assert_eq!(entries[0].body, "hello() start");
+            assert_eq!(entries[1].level, log::Level::Debug);
+            assert_eq!(entries[1].body, "hello() end");
+        });
     }
 }
