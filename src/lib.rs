@@ -1,4 +1,5 @@
 use log::debug;
+use log::trace;
 use proc_macro::TokenStream;
 use proc_macro2::Ident;
 use proc_macro2::TokenStream as TokenStream2;
@@ -68,7 +69,7 @@ fn output_start(args: &Vec<Ident>, func_name_str: &String) -> TokenStream2 {
         format!("{}:{{{}}}", arg_str, arg_str)
     }).collect::<Vec<String>>().join(", ");
     quote! {
-        std::println!("{}({}) start", #func_name_str, #aaa);
+        log::trace!("{}({}) start", #func_name_str, #aaa);
     }
 }
 
