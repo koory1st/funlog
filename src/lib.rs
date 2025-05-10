@@ -1,3 +1,6 @@
+mod attribute;
+
+use attribute::Attri;
 use log::debug;
 use log::trace;
 use proc_macro::TokenStream;
@@ -6,16 +9,22 @@ use proc_macro2::TokenStream as TokenStream2;
 use quote::{format_ident, quote};
 use syn::punctuated::Punctuated;
 use syn::token::Comma;
-use syn::{parse_macro_input, FnArg, ItemFn, Pat, PatIdent, PatType};
+use syn::Meta;
+use syn::{parse_macro_input, Attribute, FnArg, ItemFn, Pat, PatIdent, PatType};
 
 #[proc_macro_attribute]
-pub fn funlog(attr: TokenStream, item: TokenStream) -> TokenStream {
+pub fn funlog(args: TokenStream, item: TokenStream) -> TokenStream {
     let is_debug = if cfg!(debug_assertions) { true } else { false };
 
     // when not debug, just return the original function
     if !is_debug {
         return item;
     }
+
+    let attr_meta: Punctuated<Meta, Comma> = parse_macro_input!(args with Punctuated::<Meta, Comma>::parse_terminated);
+    // dbg!(&attr_meta);
+    let attribute = Attri::from(attr_meta);
+    // dbg!(&attribute);
 
     let func = parse_macro_input!(item as ItemFn);
     // dbg!(&func);

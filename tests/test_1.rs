@@ -7,9 +7,7 @@ use std::io::Read;
 fn hello() {
     println!("Hello!");
 }
-fn log_something() {
-    info!("something");
-}
+
 #[cfg(test)]
 mod tests {
     use super::*;
