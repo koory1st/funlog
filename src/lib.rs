@@ -1,6 +1,7 @@
 mod attribute;
 
-use attribute::Attri;
+use attribute::Config;
+use attribute::ConfigBuilder;
 use log::debug;
 use log::trace;
 use proc_macro::TokenStream;
@@ -23,8 +24,8 @@ pub fn funlog(args: TokenStream, item: TokenStream) -> TokenStream {
 
     let attr_meta: Punctuated<Meta, Comma> = parse_macro_input!(args with Punctuated::<Meta, Comma>::parse_terminated);
     // dbg!(&attr_meta);
-    let attribute = Attri::from(attr_meta);
-    // dbg!(&attribute);
+    let config_builder = ConfigBuilder::from(attr_meta);
+    dbg!(&config_builder);
 
     let func = parse_macro_input!(item as ItemFn);
     // dbg!(&func);
