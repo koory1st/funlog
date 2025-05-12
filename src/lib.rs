@@ -1,9 +1,6 @@
 mod attribute;
 
-use attribute::Config;
 use attribute::ConfigBuilder;
-use log::debug;
-use log::trace;
 use proc_macro::TokenStream;
 use proc_macro2::Ident;
 use proc_macro2::TokenStream as TokenStream2;

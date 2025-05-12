@@ -1,7 +1,6 @@
 use log::Level;
 use syn::parse::Parser;
-use syn::spanned::Spanned;
-use syn::{parse_macro_input, Error, MacroDelimiter, MetaList, Result};
+use syn::MetaList;
 use syn::{punctuated::Punctuated, token::Comma, Ident, Meta};
 
 #[derive(Debug)]
