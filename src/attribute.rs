@@ -5,7 +5,7 @@ use syn::{parse_macro_input, Error, MacroDelimiter, MetaList, Result};
 use syn::{punctuated::Punctuated, token::Comma, Ident, Meta};
 
 #[derive(Debug)]
-pub struct Attri {
+pub struct Config {
     parameter: ParameterEnum,
     log_level: Option<Level>,
 }
@@ -17,7 +17,7 @@ pub enum ParameterEnum {
     Specified(Vec<String>),
 }
 
-impl Attri {
+impl Config {
     pub fn from(meta_list: Punctuated<Meta, Comma>) -> Self {
         let mut parameter = ParameterEnum::NoneParameter;
         let mut log_level = None;
@@ -56,7 +56,7 @@ impl Attri {
             }
         }
 
-        Attri {
+        Config {
             parameter,
             log_level,
         }
