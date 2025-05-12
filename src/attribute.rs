@@ -13,7 +13,7 @@ pub enum ParameterEnum {
 #[derive(Debug)]
 pub struct Config {
     parameter: ParameterEnum,
-    log_level: Option<Level>,
+    log_level: Level,
 }
 
 #[derive(Debug, Default)]
@@ -35,6 +35,13 @@ impl ConfigBuilder {
             panic!("Log level already set: {:?}", v);
         }
         self.log_level = Some(log_level);
+    }
+
+    pub fn build(self) -> Config {
+        Config {
+            parameter: self.param_config.unwrap(),
+            log_level: self.log_level.unwrap(),
+        }
     }
 }
 
