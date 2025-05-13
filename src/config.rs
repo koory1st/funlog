@@ -64,6 +64,8 @@ impl ConfigBuilder {
                         builder.log_level(Level::Info);
                     } else if path.is_ident("warn") {
                         builder.log_level(Level::Warn);
+                    } else if path.is_ident("error") {
+                        builder.log_level(Level::Error);
                     } else {
                         panic!("Invalid attribute at path");
                     }
