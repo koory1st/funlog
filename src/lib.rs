@@ -1,6 +1,6 @@
-mod attribute;
+mod config;
 
-use attribute::ConfigBuilder;
+use config::ConfigBuilder;
 use proc_macro::TokenStream;
 use proc_macro2::Ident;
 use proc_macro2::TokenStream as TokenStream2;
