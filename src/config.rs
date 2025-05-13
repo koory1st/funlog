@@ -13,7 +13,15 @@ pub enum ParameterEnum {
 }
 
 #[derive(Debug)]
+pub enum OutputType {
+    OnStart,
+    OnEnd,
+    OnStartAndEnd,
+}
+
+#[derive(Debug)]
 pub struct Config {
+    output_type: OutputType,
     parameter: ParameterEnum,
     log_level: Level,
     func_vis: syn::Visibility,
@@ -25,6 +33,7 @@ pub struct Config {
 
 #[derive(Debug, Default)]
 pub struct ConfigBuilder {
+    output_type: Option<OutputType>,
     param_config: Option<ParameterEnum>,
     log_level: Option<Level>,
     func_vis: Option<syn::Visibility>,
@@ -49,10 +58,17 @@ impl ConfigBuilder {
         self.log_level = Some(log_level);
     }
 
+    pub fn output_type(&mut self, output_type: OutputType) {
+        if let Some(v) = &self.output_type {
+            panic!("Output type already set: {:?}", v);
+        }
+        self.output_type = Some(output_type);
+    }
     pub fn build(self) -> Config {
         Config {
-            parameter: self.param_config.unwrap(),
-            log_level: self.log_level.unwrap(),
+            output_type: self.output_type.unwrap_or(OutputType::OnStartAndEnd),
+            parameter: self.param_config.unwrap_or(ParameterEnum::AllParameters),
+            log_level: self.log_level.unwrap_or(Level::Debug),
             func_vis: self.func_vis.unwrap(),
             func_block: self.func_block.unwrap(),
             func_name: self.func_name.unwrap(),
@@ -105,6 +121,12 @@ impl ConfigBuilder {
                         self.log_level(Level::Warn);
                     } else if path.is_ident("error") {
                         self.log_level(Level::Error);
+                    } else if path.is_ident("onStart") {
+                        self.output_type(OutputType::OnStart);
+                    } else if path.is_ident("onEnd") {
+                        self.output_type(OutputType::OnEnd);
+                    } else if path.is_ident("onStartEnd") {
+                        self.output_type(OutputType::OnStartAndEnd);
                     } else {
                         panic!("Invalid attribute at path");
                     }
