@@ -24,6 +24,7 @@ pub fn funlog(args: TokenStream, item: TokenStream) -> TokenStream {
     // dbg!(&attr_meta);
     let config_builder = ConfigBuilder::from(attr_meta, func);
     dbg!(&config_builder);
+    let config = config_builder.build();
 
     // dbg!(&func);
     let func_vis = &func.vis; // pub
