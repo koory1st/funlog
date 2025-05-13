@@ -3,6 +3,7 @@ use quote::format_ident;
 use syn::parse::Parser;
 use syn::{Block, FnArg, ItemFn, MetaList};
 use syn::{punctuated::Punctuated, token::Comma, Ident, Meta};
+use syn::{Pat, PatIdent, PatType};
 
 #[derive(Debug)]
 pub enum ParameterEnum {
@@ -18,7 +19,7 @@ pub struct Config {
     func_vis: syn::Visibility,
     func_block: Box<Block>,
     func_name: syn::Ident,
-    func_inputs: Punctuated<FnArg, Comma>,
+    func_inputs: Vec<String>,
     func_output: syn::ReturnType,
 }
 
@@ -29,7 +30,7 @@ pub struct ConfigBuilder {
     func_vis: Option<syn::Visibility>,
     func_block: Option<Box<Block>>,
     func_name: Option<syn::Ident>,
-    func_inputs: Option<Punctuated<FnArg, Comma>>,
+    func_inputs: Vec<String>,
     func_output: Option<syn::ReturnType>,
 }
 
@@ -55,15 +56,15 @@ impl ConfigBuilder {
             func_vis: self.func_vis.unwrap(),
             func_block: self.func_block.unwrap(),
             func_name: self.func_name.unwrap(),
-            func_inputs: self.func_inputs.unwrap(),
+            func_inputs: self.func_inputs,
             func_output: self.func_output.unwrap(),
         }
     }
 
     pub fn from(meta_list: Punctuated<Meta, Comma>, func: ItemFn) -> Self {
         let mut builder = ConfigBuilder::default();
-        builder.parse_meta_list(meta_list);
         builder.set_function_fields(func);
+        builder.parse_meta_list(meta_list);
         builder
     }
 
@@ -72,10 +73,20 @@ impl ConfigBuilder {
         self.func_block = Some(func.block);
         let func_decl = func.sig;
         self.func_name = Some(func_decl.ident);
-        self.func_inputs = Some(func_decl.inputs);
+        self.set_parameters(func_decl.inputs);
         self.func_output = Some(func_decl.output);
     }
 
+    fn set_parameters(&mut self, inputs: Punctuated<FnArg, Comma>) {
+        for input in inputs.iter().filter_map(|arg| match arg {
+            FnArg::Typed(PatType { pat, .. }) => Some(pat),
+            _ => None,
+        }) {
+            if let Pat::Ident(PatIdent { ident, .. }) = input.as_ref() {
+                self.func_inputs.push(ident.to_string());
+            }
+        }
+    }
     fn parse_meta_list(&mut self, meta_list: Punctuated<Meta, Comma>) {
         for meta in meta_list.iter() {
             match meta {
@@ -102,7 +113,13 @@ impl ConfigBuilder {
                     if path.is_ident("params") {
                         let parser = Punctuated::<Ident, Comma>::parse_terminated;
                         let idents = parser.parse2(tokens.clone()).expect("Failed to parse params");
-                        let params = idents.into_iter().map(|ident| ident.to_string()).collect();
+                        let params = idents.into_iter().map(|ident| {
+                            if self.func_inputs.contains(&ident.to_string()) {
+                                ident.to_string()
+                            } else {
+                                panic!("Invalid parameter: {}, valid parameters: {:?}", ident, self.func_inputs);
+                            }
+                        }).collect();
                         self.param_config(ParameterEnum::Specified(params));
                     }
                 }
@@ -112,4 +129,6 @@ impl ConfigBuilder {
             }
         }
     }
+
 }
+

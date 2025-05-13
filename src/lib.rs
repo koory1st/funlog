@@ -26,49 +26,35 @@ pub fn funlog(args: TokenStream, item: TokenStream) -> TokenStream {
     dbg!(&config_builder);
     let config = config_builder.build();
 
-    // dbg!(&func);
-    let func_vis = &func.vis; // pub
-    let func_block = &func.block; // 函数主体实现部分{}
+    // // dbg!(&func);
+    // let func_vis = &func.vis; // pub
+    // let func_block = &func.block; // 函数主体实现部分{}
 
-    let func_decl = &func.sig; // 函数申明
-    let func_name = &func_decl.ident; // 函数名
-    let func_name_str = func_name.to_string();
-    let inner_func_name = format_ident!("__{}__", func_name);
-    let func_generics = &func_decl.generics; // 函数泛型
-    let func_inputs: &Punctuated<FnArg, Comma> = &func_decl.inputs; // 函数输入参数
-    let func_output = &func_decl.output; // 函数返回
+    // let func_decl = &func.sig; // 函数申明
+    // let func_name = &func_decl.ident; // 函数名
+    // let func_name_str = func_name.to_string();
+    // let inner_func_name = format_ident!("__{}__", func_name);
+    // let func_generics = &func_decl.generics; // 函数泛型
+    // let func_inputs: &Punctuated<FnArg, Comma> = &func_decl.inputs; // 函数输入参数
+    // let func_output = &func_decl.output; // 函数返回
 
-    let args = get_args(func_inputs);
-    let end_token = output_end(func_output, &func_name_str);
-    let start_token = output_start(&args, &func_name_str);
+    // let args = get_args(func_inputs);
+    // let end_token = output_end(func_output, &func_name_str);
+    // let start_token = output_start(&args, &func_name_str);
 
-    quote! {
-        fn #inner_func_name(#func_inputs) #func_output {
-            #func_block
-        }
-        #func_vis fn #func_name(#func_inputs) #func_output {
-            #start_token
-            let output = #inner_func_name(#(#args,) *);
-            #end_token
-            output
-        }
-    }
-    .into()
-}
-
-fn get_args(func_inputs: &Punctuated<FnArg, Comma>) -> Vec<Ident> {
-    let mut args = Vec::new();
-    for input in func_inputs.iter().filter_map(|arg| match arg {
-        FnArg::Typed(PatType { pat, ty, .. }) => Some((pat, ty)),
-        _ => None,
-    }) {
-        let (pat, ty) = input;
-        args.push(match pat.as_ref() {
-            Pat::Ident(PatIdent { ident, .. }) => ident.clone(),
-            _ => panic!("no ident"),
-        });
-    }
-    args
+    // quote! {
+    //     fn #inner_func_name(#func_inputs) #func_output {
+    //         #func_block
+    //     }
+    //     #func_vis fn #func_name(#func_inputs) #func_output {
+    //         #start_token
+    //         let output = #inner_func_name(#(#args,) *);
+    //         #end_token
+    //         output
+    //     }
+    // }
+    // .into()
+    TokenStream::new()
 }
 
 fn output_start(args: &Vec<Ident>, func_name_str: &String) -> TokenStream2 {
