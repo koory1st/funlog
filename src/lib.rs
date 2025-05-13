@@ -19,12 +19,12 @@ pub fn funlog(args: TokenStream, item: TokenStream) -> TokenStream {
         return item;
     }
 
+    let func = parse_macro_input!(item as ItemFn);
     let attr_meta: Punctuated<Meta, Comma> = parse_macro_input!(args with Punctuated::<Meta, Comma>::parse_terminated);
     // dbg!(&attr_meta);
-    let config_builder = ConfigBuilder::from(attr_meta);
+    let config_builder = ConfigBuilder::from(attr_meta, func);
     dbg!(&config_builder);
 
-    let func = parse_macro_input!(item as ItemFn);
     // dbg!(&func);
     let func_vis = &func.vis; // pub
     let func_block = &func.block; // 函数主体实现部分{}
