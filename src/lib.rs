@@ -1,5 +1,6 @@
 mod config;
 mod config_builder;
+mod output;
 
 use config_builder::ConfigBuilder;
 use proc_macro::TokenStream;
@@ -24,6 +25,7 @@ pub fn funlog(args: TokenStream, item: TokenStream) -> TokenStream {
     let attr_meta: Punctuated<Meta, Comma> = parse_macro_input!(args with Punctuated::<Meta, Comma>::parse_terminated);
     let config_builder = ConfigBuilder::from(attr_meta, func);
     let config = config_builder.build();
+    let output = config.to_output();
     dbg!(&config);
 
     // // dbg!(&func);
@@ -54,7 +56,7 @@ pub fn funlog(args: TokenStream, item: TokenStream) -> TokenStream {
     //     }
     // }
     // .into()
-    TokenStream::new()
+    output.into()
 }
 
 fn output_start(args: &Vec<Ident>, func_name_str: &String) -> TokenStream2 {
