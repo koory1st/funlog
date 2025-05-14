@@ -4,7 +4,14 @@ use syn::{Block, FnArg, ItemFn, MetaList};
 use syn::{punctuated::Punctuated, token::Comma, Ident, Meta};
 use syn::{Pat, PatIdent, PatType};
 
-use crate::config::{Config, OutputType, ParameterEnum};
+use crate::config::{Config, OutputType};
+
+#[derive(Debug)]
+pub enum ParameterEnum {
+    NoneParameter,
+    AllParameters,
+    Specified,
+}
 
 #[derive(Debug, Default)]
 pub struct ConfigBuilder {
@@ -14,7 +21,8 @@ pub struct ConfigBuilder {
     func_vis: Option<syn::Visibility>,
     func_block: Option<Box<Block>>,
     func_name: Option<syn::Ident>,
-    func_inputs: Vec<String>,
+    func_inputs: Vec<Ident>,
+    func_inputs_ident: Punctuated<FnArg, Comma>,
     func_output: Option<syn::ReturnType>,
 }
 
@@ -42,12 +50,12 @@ impl ConfigBuilder {
     pub fn build(self) -> Config {
         Config {
             output_type: self.output_type.unwrap_or(OutputType::OnStartAndEnd),
-            parameter: self.param_config.unwrap_or(ParameterEnum::AllParameters),
             log_level: self.log_level.unwrap_or(Level::Debug),
             func_vis: self.func_vis.unwrap(),
             func_block: self.func_block.unwrap(),
             func_name: self.func_name.unwrap(),
             func_inputs: self.func_inputs,
+            func_inputs_ident: self.func_inputs_ident,
             func_output: self.func_output.unwrap(),
         }
     }
@@ -64,17 +72,18 @@ impl ConfigBuilder {
         self.func_block = Some(func.block);
         let func_decl = func.sig;
         self.func_name = Some(func_decl.ident);
-        self.set_parameters(func_decl.inputs);
+        self.set_parameters(&func_decl.inputs);
+        self.func_inputs_ident = func_decl.inputs;
         self.func_output = Some(func_decl.output);
     }
 
-    fn set_parameters(&mut self, inputs: Punctuated<FnArg, Comma>) {
+    fn set_parameters(&mut self, inputs: &Punctuated<FnArg, Comma>) {
         for input in inputs.iter().filter_map(|arg| match arg {
             FnArg::Typed(PatType { pat, .. }) => Some(pat),
             _ => None,
         }) {
             if let Pat::Ident(PatIdent { ident, .. }) = input.as_ref() {
-                self.func_inputs.push(ident.to_string());
+                self.func_inputs.push(ident.clone());
             }
         }
     }
@@ -86,6 +95,7 @@ impl ConfigBuilder {
                         self.param_config(ParameterEnum::AllParameters);
                     } else if path.is_ident("none") {
                         self.param_config(ParameterEnum::NoneParameter);
+                        self.func_inputs.clear();
                     } else if path.is_ident("trace") {
                         self.log_level(Level::Trace);
                     } else if path.is_ident("debug") {
@@ -111,13 +121,14 @@ impl ConfigBuilder {
                         let parser = Punctuated::<Ident, Comma>::parse_terminated;
                         let idents = parser.parse2(tokens.clone()).expect("Failed to parse params");
                         let params = idents.into_iter().map(|ident| {
-                            if self.func_inputs.contains(&ident.to_string()) {
-                                ident.to_string()
+                            if self.func_inputs.contains(&ident) {
+                                ident
                             } else {
                                 panic!("Invalid parameter: {}, valid parameters: {:?}", ident, self.func_inputs);
                             }
                         }).collect();
-                        self.param_config(ParameterEnum::Specified(params));
+                        self.param_config(ParameterEnum::Specified);
+                        self.func_inputs = params;
                     }
                 }
                 _ => {
