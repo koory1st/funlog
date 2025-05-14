@@ -20,7 +20,7 @@ pub struct Config {
     pub func_block: Box<Block>,
     pub func_name: syn::Ident,
     pub func_inputs: Vec<Ident>,
-    pub func_inputs_ident: Punctuated<FnArg, Comma>,
+    pub func_inputs_for_declare: Punctuated<FnArg, Comma>,
     pub func_output: syn::ReturnType,
 }
 

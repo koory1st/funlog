@@ -1,6 +1,6 @@
 use log::Level;
 use syn::parse::Parser;
-use syn::{Block, FnArg, ItemFn, MetaList};
+use syn::{Block, FnArg, ItemFn, MetaList, ReturnType, Visibility};
 use syn::{punctuated::Punctuated, token::Comma, Ident, Meta};
 use syn::{Pat, PatIdent, PatType};
 
@@ -18,12 +18,12 @@ pub struct ConfigBuilder {
     output_type: Option<OutputType>,
     param_config: Option<ParameterEnum>,
     log_level: Option<Level>,
-    func_vis: Option<syn::Visibility>,
+    func_vis: Option<Visibility>,
     func_block: Option<Box<Block>>,
-    func_name: Option<syn::Ident>,
+    func_name: Option<Ident>,
     func_inputs: Vec<Ident>,
-    func_inputs_ident: Punctuated<FnArg, Comma>,
-    func_output: Option<syn::ReturnType>,
+    func_inputs_for_declare: Punctuated<FnArg, Comma>,
+    func_retrun_type: Option<ReturnType>,
 }
 
 impl ConfigBuilder {
@@ -55,8 +55,8 @@ impl ConfigBuilder {
             func_block: self.func_block.unwrap(),
             func_name: self.func_name.unwrap(),
             func_inputs: self.func_inputs,
-            func_inputs_ident: self.func_inputs_ident,
-            func_output: self.func_output.unwrap(),
+            func_inputs_for_declare: self.func_inputs_for_declare,
+            func_output: self.func_retrun_type.unwrap(),
         }
     }
 
@@ -73,8 +73,8 @@ impl ConfigBuilder {
         let func_decl = func.sig;
         self.func_name = Some(func_decl.ident);
         self.set_parameters(&func_decl.inputs);
-        self.func_inputs_ident = func_decl.inputs;
-        self.func_output = Some(func_decl.output);
+        self.func_inputs_for_declare = func_decl.inputs;
+        self.func_retrun_type = Some(func_decl.output);
     }
 
     fn set_parameters(&mut self, inputs: &Punctuated<FnArg, Comma>) {

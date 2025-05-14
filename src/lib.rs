@@ -22,10 +22,9 @@ pub fn funlog(args: TokenStream, item: TokenStream) -> TokenStream {
 
     let func = parse_macro_input!(item as ItemFn);
     let attr_meta: Punctuated<Meta, Comma> = parse_macro_input!(args with Punctuated::<Meta, Comma>::parse_terminated);
-    // dbg!(&attr_meta);
     let config_builder = ConfigBuilder::from(attr_meta, func);
-    dbg!(&config_builder);
     let config = config_builder.build();
+    dbg!(&config);
 
     // // dbg!(&func);
     // let func_vis = &func.vis; // pub
