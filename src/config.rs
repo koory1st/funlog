@@ -21,8 +21,9 @@ pub struct Config {
     pub func_vis: syn::Visibility,
     pub func_block: Box<Block>,
     pub func_name: syn::Ident,
-    pub func_inputs: Vec<Ident>,
-    pub func_inputs_for_declare: Punctuated<FnArg, Comma>,
+    pub func_params_for_output: Vec<Ident>,
+    pub func_params_for_invoke: Vec<Ident>,
+    pub func_params_for_declare: Punctuated<FnArg, Comma>,
     pub func_output: syn::ReturnType,
 }
 
@@ -32,23 +33,23 @@ impl Config {
             func_vis,
             func_block,
             func_name,
-            func_inputs: func_inputs_for_output,
-            func_inputs_for_declare,
+            func_params_for_output,
+            func_params_for_invoke,
+            func_params_for_declare,
             func_output,
             ..
         } = self;
         let inner_func_name = format_ident!("__{}__", func_name);
         let inner_func: proc_macro2::TokenStream = quote! {
-            fn #inner_func_name(#func_inputs_for_declare) #func_output {
+            fn #inner_func_name(#func_params_for_declare) #func_output {
                 #func_block
             }
         };
         let func_declare_start = quote! {
-            #func_vis fn #func_name(#func_inputs_for_declare) #func_output
+            #func_vis fn #func_name(#func_params_for_declare) #func_output
         };
-        let args:Vec<Ident> = vec![];
         let func_declare_body = quote! {
-            let output = #inner_func_name(#(#args,) *);
+            let output = #inner_func_name(#(#func_params_for_invoke,) *);
         };
         let func_declare_end = quote! {
             output

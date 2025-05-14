@@ -21,8 +21,9 @@ pub struct ConfigBuilder {
     func_vis: Option<Visibility>,
     func_block: Option<Box<Block>>,
     func_name: Option<Ident>,
-    func_inputs: Vec<Ident>,
-    func_inputs_for_declare: Punctuated<FnArg, Comma>,
+    func_params_for_output: Vec<Ident>,
+    func_params_for_invoke: Vec<Ident>,
+    func_params_for_declare: Punctuated<FnArg, Comma>,
     func_retrun_type: Option<ReturnType>,
 }
 
@@ -54,8 +55,9 @@ impl ConfigBuilder {
             func_vis: self.func_vis.unwrap(),
             func_block: self.func_block.unwrap(),
             func_name: self.func_name.unwrap(),
-            func_inputs: self.func_inputs,
-            func_inputs_for_declare: self.func_inputs_for_declare,
+            func_params_for_invoke: self.func_params_for_invoke,
+            func_params_for_output: self.func_params_for_output,
+            func_params_for_declare: self.func_params_for_declare,
             func_output: self.func_retrun_type.unwrap(),
         }
     }
@@ -73,7 +75,7 @@ impl ConfigBuilder {
         let func_decl = func.sig;
         self.func_name = Some(func_decl.ident);
         self.set_parameters(&func_decl.inputs);
-        self.func_inputs_for_declare = func_decl.inputs;
+        self.func_params_for_declare = func_decl.inputs;
         self.func_retrun_type = Some(func_decl.output);
     }
 
@@ -83,7 +85,7 @@ impl ConfigBuilder {
             _ => None,
         }) {
             if let Pat::Ident(PatIdent { ident, .. }) = input.as_ref() {
-                self.func_inputs.push(ident.clone());
+                self.func_params_for_invoke.push(ident.clone());
             }
         }
     }
@@ -95,7 +97,7 @@ impl ConfigBuilder {
                         self.param_config(ParameterEnum::AllParameters);
                     } else if path.is_ident("none") {
                         self.param_config(ParameterEnum::NoneParameter);
-                        self.func_inputs.clear();
+                        self.func_params_for_invoke.clear();
                     } else if path.is_ident("trace") {
                         self.log_level(Level::Trace);
                     } else if path.is_ident("debug") {
@@ -121,14 +123,14 @@ impl ConfigBuilder {
                         let parser = Punctuated::<Ident, Comma>::parse_terminated;
                         let idents = parser.parse2(tokens.clone()).expect("Failed to parse params");
                         let params = idents.into_iter().map(|ident| {
-                            if self.func_inputs.contains(&ident) {
+                            if self.func_params_for_invoke.contains(&ident) {
                                 ident
                             } else {
-                                panic!("Invalid parameter: {}, valid parameters: {:?}", ident, self.func_inputs);
+                                panic!("Invalid parameter: {}, valid parameters: {:?}", ident, self.func_params_for_invoke);
                             }
                         }).collect();
                         self.param_config(ParameterEnum::Specified);
-                        self.func_inputs = params;
+                        self.func_params_for_output = params;
                     }
                 }
                 _ => {
