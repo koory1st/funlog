@@ -74,11 +74,12 @@ impl Config {
             },
         };
 
+        let function_name_str = format!("{}", func_name);
         let func_output_start = quote! {
-            #log_method("abb[in]");
+            #log_method("{} [in]", #function_name_str);
         };
         let func_output_end = quote! {
-            #log_method("abb[out]");
+            #log_method("{} [out]", #function_name_str);
         };
         Output {
             inner_func,
