@@ -75,8 +75,13 @@ impl Config {
         };
 
         let function_name_str = format!("{}", func_name);
+
+        let parameters_placeholder_for_output = func_params_for_output.iter().map(|p| format!("{}:{{}}", p)).collect::<Vec<String>>().join(", ");
+
+        let log_template = format!("{} [in]: {}", function_name_str, parameters_placeholder_for_output);
+        dbg!(&log_template);
         let func_output_start = quote! {
-            #log_method("{} [in]", #function_name_str);
+            #log_method(#log_template, #(#func_params_for_output,)*);
         };
         let func_output_end = quote! {
             #log_method("{} [out]", #function_name_str);
