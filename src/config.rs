@@ -78,13 +78,35 @@ impl Config {
 
         let parameters_placeholder_for_output = func_params_for_output.iter().map(|p| format!("{}:{{}}", p)).collect::<Vec<String>>().join(", ");
 
-        let log_template = format!("{} [in]: {}", function_name_str, parameters_placeholder_for_output);
-        dbg!(&log_template);
-        let func_output_start = quote! {
-            #log_method(#log_template, #(#func_params_for_output,)*);
+        let func_output_start = match output_type {
+            OutputType::OnStart => {
+                let log_template = format!("{} [in,out]: {}", function_name_str, parameters_placeholder_for_output);
+                quote! {
+                    #log_method(#log_template, #(#func_params_for_output,)*);
+                }
+            },
+            OutputType::OnEnd => quote! {},
+            OutputType::OnStartAndEnd => {
+                let log_template = format!("{} [in]: {}", function_name_str, parameters_placeholder_for_output);
+                quote! {
+                    #log_method(#log_template, #(#func_params_for_output,)*);
+                }
+            }
         };
-        let func_output_end = quote! {
-            #log_method("{} [out]", #function_name_str);
+        let func_output_end = match output_type {
+            OutputType::OnStart => quote! {},
+            OutputType::OnEnd => {
+                let log_template = format!("{} [in,out]", function_name_str);
+                quote! {
+                    #log_method(#log_template);
+                }
+            },
+            OutputType::OnStartAndEnd => {
+                let log_template = format!("{} [out]", function_name_str);
+                quote! {
+                    #log_method(#log_template);
+                }
+            },
         };
         Output {
             inner_func,
