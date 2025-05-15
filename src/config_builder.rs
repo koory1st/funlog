@@ -58,7 +58,7 @@ impl ConfigBuilder {
             func_params_for_invoke: self.func_params_for_invoke,
             func_params_for_output: self.func_params_for_output,
             func_params_for_declare: self.func_params_for_declare,
-            func_output: self.func_retrun_type.unwrap(),
+            func_return_type: self.func_retrun_type.unwrap(),
         }
     }
 
