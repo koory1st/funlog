@@ -25,8 +25,8 @@ impl Into<TokenStream> for Output {
             #func_declare_start {
                 #func_output_start
                 #func_declare_body
-                #func_declare_end
                 #func_output_end
+                #func_declare_end
             }
         };
         ts2.into()

@@ -37,7 +37,8 @@ impl Config {
             func_params_for_invoke,
             func_params_for_declare,
             func_output,
-            ..
+            output_type,
+            log_level,
         } = self;
         let inner_func_name = format_ident!("__{}__", func_name);
         let inner_func: proc_macro2::TokenStream = quote! {
@@ -54,13 +55,38 @@ impl Config {
         let func_declare_end = quote! {
             output
         };
+
+        let log_method = match log_level {
+            Level::Debug => quote! {
+                log::debug!
+            },
+            Level::Info => quote! {
+                log::info!
+            },
+            Level::Warn => quote! {
+                log::warn!
+            },
+            Level::Error => quote! {
+                log::error!
+            },
+            Level::Trace => quote! {
+                log::trace!
+            },
+        };
+
+        let func_output_start = quote! {
+            #log_method("abb[in]");
+        };
+        let func_output_end = quote! {
+            #log_method("abb[out]");
+        };
         Output {
             inner_func,
             func_declare_start,
             func_declare_body,
             func_declare_end,
-            func_output_start: quote! {},
-            func_output_end: quote! {},
+            func_output_start,
+            func_output_end,
         }
     }
 }
