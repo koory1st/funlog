@@ -87,69 +87,143 @@ impl Config {
             _ => format!("return:{{}}"),
         };
 
-        // output_type, func_output, func_params_for_output
-        // start mode
-        // test() [in]: a:1, b:2
-        // test() [in]
+        let (func_output_start, func_output_end) =
+            match (output_type, func_return_type, func_params_for_output.len()) {
+                (OutputType::OnStart, _, 0) => {
+                    // test() [in]
+                    let template = format!("{} [in]", function_name_str);
+                    (
+                        quote! {
+                            #log_method(#template);
+                        },
+                        quote! {},
+                    )
+                }
+                (OutputType::OnStart, _, _) => {
+                    // test() [in]: a:1, b:2
+                    let template = format!(
+                        "{} [in]: {}",
+                        function_name_str, parameters_placeholder_for_output
+                    );
+                    (
+                        quote! {
+                            #log_method(#template, #(#func_params_for_output,)*);
+                        },
+                        quote! {},
+                    )
+                }
+                (OutputType::OnEnd, ReturnType::Default, 0) => {
+                    // test() [out]
+                    let template = format!("{} [out]", function_name_str);
+                    (
+                        quote! {},
+                        quote! {
+                            #log_method(#template);
+                        },
+                    )
+                }
+                (OutputType::OnEnd, ReturnType::Default, _) => {
+                    // test() [out]: a:1, b:2
+                    let template = format!(
+                        "{} [out] {}",
+                        function_name_str, parameters_placeholder_for_output
+                    );
+                    (
+                        quote! {},
+                        quote! {
+                            #log_method(#template, #(#func_params_for_output,)*);
+                        },
+                    )
+                }
+                (OutputType::OnEnd, _, 0) => {
+                    // test() [out]: return:3
+                    let template = format!("{} [out]: {}", function_name_str, return_placeholder);
+                    (
+                        quote! {},
+                        quote! {
+                            #log_method(#template, output);
+                        },
+                    )
+                }
+                (OutputType::OnEnd, _, _) => {
+                    // test() [out]: a:1, b:2, return:3
+                    let template = format!(
+                        "{} [out]: {}, {}",
+                        function_name_str, function_name_str, return_placeholder
+                    );
+                    (
+                        quote! {},
+                        quote! {
+                            #log_method(#template, #(#func_params_for_output,)* output);
+                        },
+                    )
+                }
+                (OutputType::OnStartAndEnd, ReturnType::Default, 0) => {
+                    // test() [in]
+                    // test() [out]
+                    let template_in = format!("{} [in]", function_name_str);
+                    let template_out = format!("{} [out]", function_name_str);
+                    (
+                        quote! {
+                            #log_method(#template_in);
+                        },
+                        quote! {
+                            #log_method(#template_out);
+                        },
+                    )
+                }
+                (OutputType::OnStartAndEnd, ReturnType::Default, _) => {
+                    // test() [in]:  a:1, b:2
+                    // test() [out]
+                    let template_in = format!(
+                        "{} [in]:  {}",
+                        function_name_str, parameters_placeholder_for_output
+                    );
+                    let template_out = format!("{} [out]", function_name_str);
+                    (
+                        quote! {
+                            #log_method(#template_in, #(#func_params_for_output,)*);
+                        },
+                        quote! {
+                            #log_method(#template_out);
+                        },
+                    )
+                }
+                (OutputType::OnStartAndEnd, _, 0) => {
+                    // test() [in]
+                    // test() [out]: return:3
+                    let template_in = format!("{} [in]", function_name_str);
+                    let template_out =
+                        format!("{} [out]: {}", function_name_str, return_placeholder);
+                    (
+                        quote! {
+                            #log_method(#template_in);
+                        },
+                        quote! {
+                            #log_method(#template_out, output);
+                        },
+                    )
+                }
+                (OutputType::OnStartAndEnd, _, _) => {
+                    // test() [in]:  a:1, b:2
+                    // test() [out]: return:3
+                    let template_in = format!(
+                        "{} [in]:  {}",
+                        function_name_str, parameters_placeholder_for_output
+                    );
+                    let template_out =
+                        format!("{} [out]: {}", function_name_str, return_placeholder);
+                    (
+                        quote! {
+                            #log_method(#template_in, #(#func_params_for_output,)*);
+                        },
+                        quote! {
+                            #log_method(#template_out, output);
+                        },
+                    )
+                }
+            };
 
-        // startEnd mode
-        // test() [in]:  a:1, b:2
-        // test() [out]: return:3
-        // test() [in]
-        // test() [out]
-
-        // end mode
-        // test() [out]: a:1, b:2, return:3
-        // test() [out]: a:1, b:2
-        // test() [out]: return:3
-        // test() [out]
-        let (start, end) = match (output_type, func_return_type, func_params_for_output.len()) {
-            (OutputType::OnStart, _, 0) => {
-                // test() [in]
-                let template = format!("{} [in]", function_name_str);
-                (
-                    quote! {
-                        #log_method(template, #function_name_str);
-                    },
-                    quote! {},
-                )
-            }
-            (OutputType::OnStart, _, _) => {
-                // test() [in]: a:1, b:2
-                let template = format!(
-                    "{} [in]: {}",
-                    function_name_str, parameters_placeholder_for_output
-                );
-                (
-                    quote! {
-                        #log_method(template, #function_name_str, #(#func_params_for_output,)*);
-                    },
-                    quote! {},
-                )
-            }
-            (OutputType::OnEnd, ReturnType::Default, 0) => {
-                // test() [out]
-                let template = format!("{} [out]", function_name_str);
-                (
-                    quote! {
-                        #log_method(template, #function_name_str);
-                    },
-                    quote! {},
-                )
-            }
-        };
-
-        let log_template = format!(
-            "{} [in]: {}",
-            function_name_str, parameters_placeholder_for_output
-        );
-        dbg!(&log_template);
-        let func_output_start = quote! {
-            #log_method(#log_template, #(#func_params_for_output,)*);
-        };
-        let func_output_end = quote! {
-            #log_method("{} [out]", #function_name_str);
-        };
         Output {
             inner_func,
             func_declare_start,
