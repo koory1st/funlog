@@ -90,8 +90,8 @@ impl Config {
         let (func_output_start, func_output_end) =
             match (output_type, func_return_type, func_params_for_output.len()) {
                 (OutputType::OnStart, _, 0) => {
-                    // test() [in]
-                    let template = format!("{} [in]", function_name_str);
+                    // test() [in ]
+                    let template = format!("{} [in ]", function_name_str);
                     (
                         quote! {
                             #log_method(#template);
@@ -102,7 +102,7 @@ impl Config {
                 (OutputType::OnStart, _, _) => {
                     // test() [in]: a:1, b:2
                     let template = format!(
-                        "{} [in]: {}",
+                        "{} [in ]: {}",
                         function_name_str, parameters_placeholder_for_output
                     );
                     (
@@ -159,9 +159,9 @@ impl Config {
                     )
                 }
                 (OutputType::OnStartAndEnd, ReturnType::Default, 0) => {
-                    // test() [in]
+                    // test() [in ]
                     // test() [out]
-                    let template_in = format!("{} [in]", function_name_str);
+                    let template_in = format!("{} [in ]", function_name_str);
                     let template_out = format!("{} [out]", function_name_str);
                     (
                         quote! {
@@ -173,10 +173,10 @@ impl Config {
                     )
                 }
                 (OutputType::OnStartAndEnd, ReturnType::Default, _) => {
-                    // test() [in]:  a:1, b:2
+                    // test() [in ]: a:1, b:2
                     // test() [out]
                     let template_in = format!(
-                        "{} [in]:  {}",
+                        "{} [in ]: {}",
                         function_name_str, parameters_placeholder_for_output
                     );
                     let template_out = format!("{} [out]", function_name_str);
@@ -190,9 +190,9 @@ impl Config {
                     )
                 }
                 (OutputType::OnStartAndEnd, _, 0) => {
-                    // test() [in]
+                    // test() [in ]
                     // test() [out]: return:3
-                    let template_in = format!("{} [in]", function_name_str);
+                    let template_in = format!("{} [in ]", function_name_str);
                     let template_out =
                         format!("{} [out]: {}", function_name_str, return_placeholder);
                     (
@@ -205,10 +205,10 @@ impl Config {
                     )
                 }
                 (OutputType::OnStartAndEnd, _, _) => {
-                    // test() [in]:  a:1, b:2
+                    // test() [in ]: a:1, b:2
                     // test() [out]: return:3
                     let template_in = format!(
-                        "{} [in]:  {}",
+                        "{} [in ]: {}",
                         function_name_str, parameters_placeholder_for_output
                     );
                     let template_out =
