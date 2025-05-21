@@ -1,10 +1,10 @@
 use log::Level;
 use syn::parse::Parser;
-use syn::{Block, FnArg, ItemFn, MetaList, ReturnType, Visibility};
 use syn::{punctuated::Punctuated, token::Comma, Ident, Meta};
+use syn::{Block, FnArg, ItemFn, MetaList, ReturnType, Visibility};
 use syn::{Pat, PatIdent, PatType};
 
-use crate::config::{Config, OutputType};
+use crate::config::{Config, OutputPosition};
 
 #[derive(Debug)]
 pub enum ParameterEnum {
@@ -15,7 +15,7 @@ pub enum ParameterEnum {
 
 #[derive(Debug, Default)]
 pub struct ConfigBuilder {
-    output_type: Option<OutputType>,
+    output_position: Option<OutputPosition>,
     param_config: Option<ParameterEnum>,
     log_level: Option<Level>,
     func_vis: Option<Visibility>,
@@ -24,7 +24,7 @@ pub struct ConfigBuilder {
     func_params_for_output: Vec<Ident>,
     func_params_for_invoke: Vec<Ident>,
     func_params_for_declare: Punctuated<FnArg, Comma>,
-    func_retrun_type: Option<ReturnType>,
+    func_return_type: Option<ReturnType>,
 }
 
 impl ConfigBuilder {
@@ -42,15 +42,17 @@ impl ConfigBuilder {
         self.log_level = Some(log_level);
     }
 
-    pub fn output_type(&mut self, output_type: OutputType) {
-        if let Some(v) = &self.output_type {
-            panic!("Output type already set: {:?}", v);
+    pub fn output_position(&mut self, output_position: OutputPosition) {
+        if let Some(v) = &self.output_position {
+            panic!("Output position already set: {:?}", v);
         }
-        self.output_type = Some(output_type);
+        self.output_position = Some(output_position);
     }
     pub fn build(self) -> Config {
         Config {
-            output_type: self.output_type.unwrap_or(OutputType::OnStartAndEnd),
+            output_position: self
+                .output_position
+                .unwrap_or(OutputPosition::OnStartAndEnd),
             log_level: self.log_level.unwrap_or(Level::Debug),
             func_vis: self.func_vis.unwrap(),
             func_block: self.func_block.unwrap(),
@@ -58,7 +60,7 @@ impl ConfigBuilder {
             func_params_for_invoke: self.func_params_for_invoke,
             func_params_for_output: self.func_params_for_output,
             func_params_for_declare: self.func_params_for_declare,
-            func_return_type: self.func_retrun_type.unwrap(),
+            func_return_type: self.func_return_type.unwrap(),
         }
     }
 
@@ -76,7 +78,7 @@ impl ConfigBuilder {
         self.func_name = Some(func_decl.ident);
         self.set_parameters(&func_decl.inputs);
         self.func_params_for_declare = func_decl.inputs;
-        self.func_retrun_type = Some(func_decl.output);
+        self.func_return_type = Some(func_decl.output);
     }
 
     fn set_parameters(&mut self, inputs: &Punctuated<FnArg, Comma>) {
@@ -109,35 +111,42 @@ impl ConfigBuilder {
                     } else if path.is_ident("error") {
                         self.log_level(Level::Error);
                     } else if path.is_ident("onStart") {
-                        self.output_type(OutputType::OnStart);
+                        self.output_position(OutputPosition::OnStart);
                     } else if path.is_ident("onEnd") {
-                        self.output_type(OutputType::OnEnd);
+                        self.output_position(OutputPosition::OnEnd);
                     } else if path.is_ident("onStartEnd") {
-                        self.output_type(OutputType::OnStartAndEnd);
+                        self.output_position(OutputPosition::OnStartAndEnd);
                     } else {
                         panic!("Invalid attribute at path");
                     }
-                },
-                Meta::List(MetaList{path, tokens, ..}) => {
+                }
+                Meta::List(MetaList { path, tokens, .. }) => {
                     if path.is_ident("params") {
                         let parser = Punctuated::<Ident, Comma>::parse_terminated;
-                        let idents = parser.parse2(tokens.clone()).expect("Failed to parse params");
-                        let params = idents.into_iter().map(|ident| {
-                            if self.func_params_for_invoke.contains(&ident) {
-                                ident
-                            } else {
-                                panic!("Invalid parameter: {}, valid parameters: {:?}", ident, self.func_params_for_invoke);
-                            }
-                        }).collect();
+                        let idents = parser
+                            .parse2(tokens.clone())
+                            .expect("Failed to parse params");
+                        let params = idents
+                            .into_iter()
+                            .map(|ident| {
+                                if self.func_params_for_invoke.contains(&ident) {
+                                    ident
+                                } else {
+                                    panic!(
+                                        "Invalid parameter: {}, valid parameters: {:?}",
+                                        ident, self.func_params_for_invoke
+                                    );
+                                }
+                            })
+                            .collect();
                         self.param_config(ParameterEnum::Specified);
                         self.func_params_for_output = params;
                     }
                 }
                 _ => {
                     panic!("Invalid attribute at meta");
-                },
+                }
             }
         }
     }
-
 }
