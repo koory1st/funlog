@@ -9,7 +9,7 @@ fn main() {
     test();
 }
 
-#[funlog]
+#[funlog(print)]
 fn test() {
     println!("Hello, world!");
 }

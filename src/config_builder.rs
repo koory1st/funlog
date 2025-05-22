@@ -1,10 +1,9 @@
-use log::Level;
 use syn::parse::Parser;
 use syn::{punctuated::Punctuated, token::Comma, Ident, Meta};
 use syn::{Block, FnArg, ItemFn, MetaList, ReturnType, Visibility};
 use syn::{Pat, PatIdent, PatType};
 
-use crate::config::{Config, OutputPosition};
+use crate::config::{Config, OutputPosition, OutputType};
 
 #[derive(Debug)]
 pub enum ParameterEnum {
@@ -17,7 +16,7 @@ pub enum ParameterEnum {
 pub struct ConfigBuilder {
     output_position: Option<OutputPosition>,
     param_config: Option<ParameterEnum>,
-    log_level: Option<Level>,
+    output_type: Option<OutputType>,
     func_vis: Option<Visibility>,
     func_block: Option<Box<Block>>,
     func_name: Option<Ident>,
@@ -35,11 +34,11 @@ impl ConfigBuilder {
         self.param_config = Some(param_config);
     }
 
-    pub fn log_level(&mut self, log_level: Level) {
-        if let Some(v) = &self.log_level {
-            panic!("Log level already set: {:?}", v);
+    pub fn output_type(&mut self, output_type: OutputType) {
+        if let Some(v) = &self.output_type {
+            panic!("Output type already set: {:?}", v);
         }
-        self.log_level = Some(log_level);
+        self.output_type = Some(output_type);
     }
 
     pub fn output_position(&mut self, output_position: OutputPosition) {
@@ -53,7 +52,7 @@ impl ConfigBuilder {
             output_position: self
                 .output_position
                 .unwrap_or(OutputPosition::OnStartAndEnd),
-            log_level: self.log_level.unwrap_or(Level::Debug),
+            output_type: self.output_type.unwrap_or(OutputType::Print),
             func_vis: self.func_vis.unwrap(),
             func_block: self.func_block.unwrap(),
             func_name: self.func_name.unwrap(),
@@ -100,16 +99,18 @@ impl ConfigBuilder {
                     } else if path.is_ident("none") {
                         self.param_config(ParameterEnum::NoneParameter);
                         self.func_params_for_invoke.clear();
+                    } else if path.is_ident("print") {
+                        self.output_type(OutputType::Print);
                     } else if path.is_ident("trace") {
-                        self.log_level(Level::Trace);
+                        self.output_type(OutputType::Trace);
                     } else if path.is_ident("debug") {
-                        self.log_level(Level::Debug);
+                        self.output_type(OutputType::Debug);
                     } else if path.is_ident("info") {
-                        self.log_level(Level::Info);
+                        self.output_type(OutputType::Info);
                     } else if path.is_ident("warn") {
-                        self.log_level(Level::Warn);
+                        self.output_type(OutputType::Warn);
                     } else if path.is_ident("error") {
-                        self.log_level(Level::Error);
+                        self.output_type(OutputType::Error);
                     } else if path.is_ident("onStart") {
                         self.output_position(OutputPosition::OnStart);
                     } else if path.is_ident("onEnd") {

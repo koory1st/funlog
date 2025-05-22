@@ -1,4 +1,3 @@
-use log::Level;
 use quote::{format_ident, quote};
 use syn::parse::Parser;
 use syn::{punctuated::Punctuated, token::Comma, Ident, Meta};
@@ -15,9 +14,19 @@ pub enum OutputPosition {
 }
 
 #[derive(Debug)]
+pub enum OutputType {
+    Print,
+    Error,
+    Warn,
+    Info,
+    Debug,
+    Trace,
+}
+
+#[derive(Debug)]
 pub struct Config {
     pub output_position: OutputPosition,
-    pub log_level: Level,
+    pub output_type: OutputType,
     pub func_vis: syn::Visibility,
     pub func_block: Box<Block>,
     pub func_name: syn::Ident,
@@ -38,7 +47,7 @@ impl Config {
             func_params_for_declare,
             func_return_type,
             output_position,
-            log_level,
+            output_type,
         } = self;
         let inner_func_name = format_ident!("__{}__", func_name);
         let inner_func: proc_macro2::TokenStream = quote! {
@@ -56,21 +65,24 @@ impl Config {
             output
         };
 
-        let log_method = match log_level {
-            Level::Debug => quote! {
+        let log_method = match output_type {
+            OutputType::Debug => quote! {
                 log::debug!
             },
-            Level::Info => quote! {
+            OutputType::Info => quote! {
                 log::info!
             },
-            Level::Warn => quote! {
+            OutputType::Warn => quote! {
                 log::warn!
             },
-            Level::Error => quote! {
+            OutputType::Error => quote! {
                 log::error!
             },
-            Level::Trace => quote! {
+            OutputType::Trace => quote! {
                 log::trace!
+            },
+            OutputType::Print => quote! {
+                println!
             },
         };
 
