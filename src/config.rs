@@ -1,10 +1,7 @@
-use quote::{format_ident, quote};
-use syn::parse::Parser;
-use syn::{punctuated::Punctuated, token::Comma, Ident, Meta};
-use syn::{Block, FnArg, ItemFn, MetaList, ReturnType};
-use syn::{Pat, PatIdent, PatType};
-
 use crate::output::Output;
+use quote::{format_ident, quote};
+use syn::{punctuated::Punctuated, token::Comma, Ident};
+use syn::{Block, FnArg, ReturnType};
 
 #[derive(Debug)]
 pub enum OutputPosition {
