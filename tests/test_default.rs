@@ -1,8 +1,6 @@
 use funlog::funlog;
-use gag::BufferRedirect;
-use std::io::Read;
 
-#[funlog(print)]
+#[funlog()]
 fn hello() {
     println!("Hello!");
 }
@@ -10,6 +8,8 @@ fn hello() {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use gag::BufferRedirect;
+    use std::io::Read;
 
     #[test]
     #[ignore]

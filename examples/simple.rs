@@ -3,13 +3,13 @@ use std::env::set_var;
 
 fn main() {
     unsafe {
-        set_var("RUST_LOG", "debug");
+        set_var("RUST_LOG", "trace");
     }
     env_logger::init();
     test();
 }
 
-#[funlog(debug)]
+#[funlog(trace)]
 fn test() {
     println!("Hello, world!");
 }

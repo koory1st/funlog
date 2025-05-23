@@ -1,7 +1,7 @@
 use funlog::funlog;
 use std::env::set_var;
 
-#[funlog(debug)]
+#[funlog(error)]
 fn hello() {
     println!("Hello!");
 }
@@ -12,17 +12,17 @@ mod tests {
     use mock_logger::MockLogger;
 
     #[test]
-    fn test_debug_logging() {
+    fn test_error_logging() {
         unsafe {
-            set_var("RUST_LOG", "debug");
+            set_var("RUST_LOG", "error");
         }
         mock_logger::init();
         hello();
         MockLogger::entries(|entries| {
             assert_eq!(entries.len(), 2);
-            assert_eq!(entries[0].level, log::Level::Debug);
+            assert_eq!(entries[0].level, log::Level::Error);
             assert_eq!(entries[0].body, "hello [in ]");
-            assert_eq!(entries[1].level, log::Level::Debug);
+            assert_eq!(entries[1].level, log::Level::Error);
             assert_eq!(entries[1].body, "hello [out]");
         });
     }
