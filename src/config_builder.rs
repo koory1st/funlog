@@ -16,6 +16,7 @@ pub enum ParameterEnum {
 pub struct ConfigBuilder {
     output_position: Option<OutputPosition>,
     param_config: Option<ParameterEnum>,
+    output_ret_value: Option<bool>,
     output_type: Option<OutputType>,
     func_vis: Option<Visibility>,
     func_block: Option<Box<Block>>,
@@ -47,12 +48,19 @@ impl ConfigBuilder {
         }
         self.output_position = Some(output_position);
     }
+    pub fn output_ret_value(&mut self, output_ret_value: bool) {
+        if let Some(v) = &self.output_ret_value {
+            panic!("Output return value already set: {:?}", v);
+        }
+        self.output_ret_value = Some(output_ret_value);
+    }
     pub fn build(self) -> Config {
         Config {
             output_position: self
                 .output_position
                 .unwrap_or(OutputPosition::OnStartAndEnd),
             output_type: self.output_type.unwrap_or(OutputType::Print),
+            output_ret_value: self.output_ret_value.unwrap_or(false),
             func_vis: self.func_vis.unwrap(),
             func_block: self.func_block.unwrap(),
             func_name: self.func_name.unwrap(),
@@ -117,6 +125,8 @@ impl ConfigBuilder {
                         self.output_position(OutputPosition::OnEnd);
                     } else if path.is_ident("onStartEnd") {
                         self.output_position(OutputPosition::OnStartAndEnd);
+                    } else if path.is_ident("retVal") {
+                        self.output_ret_value(true);
                     } else {
                         panic!("Invalid attribute at path");
                     }

@@ -24,6 +24,7 @@ pub enum OutputType {
 pub struct Config {
     pub output_position: OutputPosition,
     pub output_type: OutputType,
+    pub output_ret_value: bool,
     pub func_vis: syn::Visibility,
     pub func_block: Box<Block>,
     pub func_name: syn::Ident,
@@ -45,6 +46,7 @@ impl Config {
             func_return_type,
             output_position,
             output_type,
+            output_ret_value,
         } = self;
         let inner_func_name = format_ident!("__{}__", func_name);
         let inner_func: proc_macro2::TokenStream = quote! {
@@ -99,9 +101,10 @@ impl Config {
         let (func_output_start, func_output_end) = match (
             output_position,
             func_return_type,
+            output_ret_value,
             func_params_for_output.len(),
         ) {
-            (OutputPosition::OnStart, _, 0) => {
+            (OutputPosition::OnStart, _, _, 0) => {
                 // test() [in ]
                 let template = format!("{} [in ]", function_name_str);
                 (
@@ -111,7 +114,7 @@ impl Config {
                     quote! {},
                 )
             }
-            (OutputPosition::OnStart, _, _) => {
+            (OutputPosition::OnStart, _, _, _) => {
                 // test() [in]: a:1, b:2
                 let template = format!(
                     "{} [in ]: {}",
@@ -124,7 +127,7 @@ impl Config {
                     quote! {},
                 )
             }
-            (OutputPosition::OnEnd, ReturnType::Default, 0) => {
+            (OutputPosition::OnEnd, ReturnType::Default, _, 0) => {
                 // test() [out]
                 let template = format!("{} [out]", function_name_str);
                 (
@@ -134,7 +137,7 @@ impl Config {
                     },
                 )
             }
-            (OutputPosition::OnEnd, ReturnType::Default, _) => {
+            (OutputPosition::OnEnd, ReturnType::Default, _, _) => {
                 // test() [out]: a:1, b:2
                 let template = format!(
                     "{} [out] {}",
@@ -147,7 +150,7 @@ impl Config {
                     },
                 )
             }
-            (OutputPosition::OnEnd, _, 0) => {
+            (OutputPosition::OnEnd, _, true, 0) => {
                 // test() [out]: return:3
                 let template = format!("{} [out]: {}", function_name_str, return_placeholder);
                 (
@@ -157,7 +160,17 @@ impl Config {
                     },
                 )
             }
-            (OutputPosition::OnEnd, _, _) => {
+            (OutputPosition::OnEnd, _, false, 0) => {
+                // test() [out]
+                let template = format!("{} [out]", function_name_str);
+                (
+                    quote! {},
+                    quote! {
+                        #log_method(#template, output);
+                    },
+                )
+            }
+            (OutputPosition::OnEnd, _, true, _) => {
                 // test() [out]: a:1, b:2, return:3
                 let template = format!(
                     "{} [out]: {}, {}",
@@ -170,7 +183,17 @@ impl Config {
                     },
                 )
             }
-            (OutputPosition::OnStartAndEnd, ReturnType::Default, 0) => {
+            (OutputPosition::OnEnd, _, false, _) => {
+                // test() [out]: a:1, b:2
+                let template = format!("{} [out]: {}", function_name_str, function_name_str);
+                (
+                    quote! {},
+                    quote! {
+                        #log_method(#template, #(#func_params_for_output,)* output);
+                    },
+                )
+            }
+            (OutputPosition::OnStartAndEnd, ReturnType::Default, _, 0) => {
                 // test() [in ]
                 // test() [out]
                 let template_in = format!("{} [in ]", function_name_str);
@@ -184,7 +207,7 @@ impl Config {
                     },
                 )
             }
-            (OutputPosition::OnStartAndEnd, ReturnType::Default, _) => {
+            (OutputPosition::OnStartAndEnd, ReturnType::Default, _, _) => {
                 // test() [in ]: a:1, b:2
                 // test() [out]
                 let template_in = format!(
@@ -201,7 +224,7 @@ impl Config {
                     },
                 )
             }
-            (OutputPosition::OnStartAndEnd, _, 0) => {
+            (OutputPosition::OnStartAndEnd, _, true, 0) => {
                 // test() [in ]
                 // test() [out]: return:3
                 let template_in = format!("{} [in ]", function_name_str);
@@ -215,7 +238,21 @@ impl Config {
                     },
                 )
             }
-            (OutputPosition::OnStartAndEnd, _, _) => {
+            (OutputPosition::OnStartAndEnd, _, false, 0) => {
+                // test() [in ]
+                // test() [out]
+                let template_in = format!("{} [in ]", function_name_str);
+                let template_out = format!("{} [out]", function_name_str);
+                (
+                    quote! {
+                        #log_method(#template_in);
+                    },
+                    quote! {
+                        #log_method(#template_out);
+                    },
+                )
+            }
+            (OutputPosition::OnStartAndEnd, _, true, _) => {
                 // test() [in ]: a:1, b:2
                 // test() [out]: return:3
                 let template_in = format!(
@@ -229,6 +266,23 @@ impl Config {
                     },
                     quote! {
                         #log_method(#template_out, output);
+                    },
+                )
+            }
+            (OutputPosition::OnStartAndEnd, _, false, _) => {
+                // test() [in ]: a:1, b:2
+                // test() [out]
+                let template_in = format!(
+                    "{} [in ]: {}",
+                    function_name_str, parameters_placeholder_for_output
+                );
+                let template_out = format!("{} [out]", function_name_str);
+                (
+                    quote! {
+                        #log_method(#template_in, #(#func_params_for_output,)*);
+                    },
+                    quote! {
+                        #log_method(#template_out);
                     },
                 )
             }
