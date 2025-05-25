@@ -1,8 +1,10 @@
 mod config;
 mod config_builder;
+mod generics_item_fn;
 mod output;
 
 use config_builder::ConfigBuilder;
+use generics_item_fn::GenericsFn;
 use proc_macro::TokenStream;
 use syn::punctuated::Punctuated;
 use syn::token::Comma;
@@ -19,6 +21,7 @@ pub fn funlog(args: TokenStream, item: TokenStream) -> TokenStream {
     }
 
     let func = parse_macro_input!(item as ItemFn);
+    let func = GenericsFn::from(func);
     let attr_meta: Punctuated<Meta, Comma> =
         parse_macro_input!(args with Punctuated::<Meta, Comma>::parse_terminated);
     let config_builder = ConfigBuilder::from(attr_meta, func);

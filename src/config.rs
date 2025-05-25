@@ -26,7 +26,7 @@ pub struct Config {
     pub output_type: OutputType,
     pub output_ret_value: bool,
     pub func_vis: syn::Visibility,
-    pub func_block: Box<Block>,
+    pub func_block: Block,
     pub func_name: syn::Ident,
     pub func_params_for_output: Vec<Ident>,
     pub func_params_for_invoke: Vec<Ident>,

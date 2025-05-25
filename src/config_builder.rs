@@ -4,6 +4,7 @@ use syn::{Block, FnArg, ItemFn, MetaList, ReturnType, Visibility};
 use syn::{Pat, PatIdent, PatType};
 
 use crate::config::{Config, OutputPosition, OutputType};
+use crate::generics_item_fn::GenericsFn;
 
 #[derive(Debug)]
 pub enum ParameterEnum {
@@ -19,7 +20,7 @@ pub struct ConfigBuilder {
     output_ret_value: Option<bool>,
     output_type: Option<OutputType>,
     func_vis: Option<Visibility>,
-    func_block: Option<Box<Block>>,
+    func_block: Option<Block>,
     func_name: Option<Ident>,
     func_params_for_output: Vec<Ident>,
     func_params_for_invoke: Vec<Ident>,
@@ -71,14 +72,14 @@ impl ConfigBuilder {
         }
     }
 
-    pub fn from(meta_list: Punctuated<Meta, Comma>, func: ItemFn) -> Self {
+    pub fn from(meta_list: Punctuated<Meta, Comma>, func: GenericsFn) -> Self {
         let mut builder = ConfigBuilder::default();
         builder.set_function_fields(func);
         builder.parse_meta_list(meta_list);
         builder
     }
 
-    fn set_function_fields(&mut self, func: ItemFn) {
+    fn set_function_fields(&mut self, func: GenericsFn) {
         self.func_vis = Some(func.vis);
         self.func_block = Some(func.block);
         let func_decl = func.sig;
