@@ -1,5 +1,6 @@
 mod config;
 mod config_builder;
+mod generics_item_fn;
 mod output;
 
 use config_builder::ConfigBuilder;
