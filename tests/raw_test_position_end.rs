@@ -1,0 +1,27 @@
+use funlog::funlog;
+use std::env::set_var;
+
+#[funlog(debug, onEnd)]
+fn hello() {
+    println!("Hello!");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use mock_logger::MockLogger;
+
+    #[test]
+    fn test_debug_logging() {
+        unsafe {
+            set_var("RUST_LOG", "debug");
+        }
+        mock_logger::init();
+        hello();
+        MockLogger::entries(|entries| {
+            assert_eq!(entries.len(), 1);
+            assert_eq!(entries[0].level, log::Level::Debug);
+            assert_eq!(entries[0].body, "hello [out]");
+        });
+    }
+}

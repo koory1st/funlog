@@ -166,7 +166,7 @@ impl Config {
                 (
                     quote! {},
                     quote! {
-                        #log_method(#template, output);
+                        #log_method(#template);
                     },
                 )
             }
