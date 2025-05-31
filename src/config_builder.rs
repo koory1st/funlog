@@ -73,11 +73,13 @@ impl ConfigBuilder {
         }
     }
 
-    pub fn from(meta_list: Punctuated<Meta, Comma>, func: GenericsFn) -> Self {
+    pub fn from(meta_list: Punctuated<Meta, Comma>, func: GenericsFn) -> Result<Self, syn::Error> {
         let mut builder = ConfigBuilder::default();
         builder.set_function_fields(func);
-        builder.parse_meta_list(meta_list);
-        builder
+        if let Err(e) = builder.parse_meta_list(meta_list) {
+            return Err(e);
+        }
+        Ok(builder)
     }
 
     fn set_function_fields(&mut self, func: GenericsFn) {
@@ -100,7 +102,7 @@ impl ConfigBuilder {
             }
         }
     }
-    fn parse_meta_list(&mut self, meta_list: Punctuated<Meta, Comma>) {
+    fn parse_meta_list(&mut self, meta_list: Punctuated<Meta, Comma>) -> Result<(), syn::Error> {
         for meta in meta_list.iter() {
             match meta {
                 Meta::Path(path) => {
@@ -130,36 +132,43 @@ impl ConfigBuilder {
                     } else if path.is_ident("retVal") {
                         self.output_ret_value(true);
                     } else {
-                        panic!("Invalid attribute at path");
+                        return Err(syn::Error::new_spanned(path, "Invalid attribute at path"));
                     }
                 }
                 Meta::List(MetaList { path, tokens, .. }) => {
                     if path.is_ident("params") {
                         let parser = Punctuated::<Ident, Comma>::parse_terminated;
-                        let idents = parser
-                            .parse2(tokens.clone())
-                            .expect("Failed to parse params");
+                        let idents = parser.parse2(tokens.clone()).map_err(|e| {
+                            syn::Error::new_spanned(
+                                tokens,
+                                format!("Failed to parse params: {}", e),
+                            )
+                        })?;
                         let params = idents
                             .into_iter()
                             .map(|ident| {
                                 if self.func_params_for_invoke.contains(&ident) {
-                                    ident
+                                    Ok(ident)
                                 } else {
-                                    panic!(
-                                        "Invalid parameter: {}, valid parameters: {:?}",
-                                        ident, self.func_params_for_invoke
-                                    );
+                                    Err(syn::Error::new_spanned(
+                                        &ident,
+                                        format!(
+                                            "Invalid parameter: {}, valid parameters: {:?}",
+                                            ident, self.func_params_for_invoke
+                                        ),
+                                    ))
                                 }
                             })
-                            .collect();
+                            .collect::<Result<Vec<_>, _>>()?;
                         self.param_config(ParameterEnum::Specified);
                         self.func_params_for_output = params;
                     }
                 }
                 _ => {
-                    panic!("Invalid attribute at meta");
+                    return Err(syn::Error::new_spanned(meta, "Invalid attribute at meta"));
                 }
             }
         }
+        Ok(())
     }
 }

@@ -24,8 +24,12 @@ pub fn funlog(args: TokenStream, item: TokenStream) -> TokenStream {
     let func = GenericsFn::from(func);
     let attr_meta: Punctuated<Meta, Comma> =
         parse_macro_input!(args with Punctuated::<Meta, Comma>::parse_terminated);
-    let config_builder = ConfigBuilder::from(attr_meta, func);
-    let config = config_builder.build();
-    let output = config.to_output();
-    output.into()
+    match ConfigBuilder::from(attr_meta, func) {
+        Ok(config_builder) => {
+            let config = config_builder.build();
+            let output = config.to_output();
+            output.into()
+        }
+        Err(e) => e.into_compile_error().into(),
+    }
 }

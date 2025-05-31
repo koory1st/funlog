@@ -185,11 +185,14 @@ impl Config {
             }
             (OutputPosition::OnEnd, _, false, _) => {
                 // test() [out]: a:1, b:2
-                let template = format!("{} [out]: {}", function_name_str, function_name_str);
+                let template = format!(
+                    "{} [out]: {}",
+                    function_name_str, parameters_placeholder_for_output
+                );
                 (
                     quote! {},
                     quote! {
-                        #log_method(#template, #(#func_params_for_output,)* output);
+                        #log_method(#template, #(#func_params_for_output,)*);
                     },
                 )
             }
