@@ -57,6 +57,8 @@ impl ConfigBuilder {
         self.output_ret_value = Some(output_ret_value);
     }
     pub fn build(self) -> Config {
+        if let Some(ParameterEnum::AllParameters) = self.param_config {
+        }
         Config {
             output_position: self
                 .output_position
@@ -66,8 +68,11 @@ impl ConfigBuilder {
             func_vis: self.func_vis.unwrap(),
             func_block: self.func_block.unwrap(),
             func_name: self.func_name.unwrap(),
+            func_params_for_output: match self.param_config {
+                Some(ParameterEnum::AllParameters) => self.func_params_for_invoke.clone(),
+                _ => self.func_params_for_output,
+            },
             func_params_for_invoke: self.func_params_for_invoke,
-            func_params_for_output: self.func_params_for_output,
             func_params_for_declare: self.func_params_for_declare,
             func_return_type: self.func_return_type.unwrap(),
         }
