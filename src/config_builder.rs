@@ -1,7 +1,6 @@
 use syn::parse::Parser;
-use syn::spanned::Spanned;
 use syn::{punctuated::Punctuated, token::Comma, Ident, Meta};
-use syn::{Block, FnArg, ItemFn, MetaList, ReturnType, Visibility};
+use syn::{Block, FnArg, MetaList, ReturnType, Visibility};
 use syn::{Pat, PatIdent, PatType};
 
 use crate::config::{Config, OutputPosition, OutputType};

@@ -1,6 +1,7 @@
-use syn::{Attribute, Block, ImplItemFn, ItemFn, Signature, Visibility};
+use syn::{Attribute, Block, ItemFn, Signature, Visibility};
 
 pub struct GenericsFn {
+    #[allow(dead_code)]
     pub attrs: Vec<Attribute>,
     pub vis: Visibility,
     pub sig: Signature,

@@ -48,6 +48,7 @@ impl Config {
             output_type,
             output_ret_value,
         } = self;
+
         let inner_func_name = format_ident!("__{}__", func_name);
         let inner_func: proc_macro2::TokenStream = quote! {
             fn #inner_func_name(#func_params_for_declare) #func_return_type {
@@ -57,8 +58,25 @@ impl Config {
         let func_declare_start = quote! {
             #func_vis fn #func_name(#func_params_for_declare) #func_return_type
         };
+        // Fix: If func_params_for_invoke is empty, extract parameters from func_params_for_declare
+        // This handles the case where the ConfigBuilder didn't properly populate func_params_for_invoke
+        let actual_params_for_invoke = if func_params_for_invoke.is_empty() {
+            func_params_for_declare.iter().filter_map(|arg| match arg {
+                syn::FnArg::Typed(syn::PatType { pat, .. }) => {
+                    if let syn::Pat::Ident(syn::PatIdent { ident, .. }) = pat.as_ref() {
+                        Some(ident.clone())
+                    } else {
+                        None
+                    }
+                }
+                _ => None,
+            }).collect::<Vec<_>>()
+        } else {
+            func_params_for_invoke.clone()
+        };
+        
         let func_declare_body = quote! {
-            let output = #inner_func_name(#(#func_params_for_invoke,) *);
+            let output = #inner_func_name(#(#actual_params_for_invoke,) *);
         };
         let func_declare_end = quote! {
             output
@@ -174,7 +192,7 @@ impl Config {
                 // test() [out]: a:1, b:2, return:3
                 let template = format!(
                     "{} [out]: {}, {}",
-                    function_name_str, function_name_str, return_placeholder
+                    function_name_str, parameters_placeholder_for_output, return_placeholder
                 );
                 (
                     quote! {},

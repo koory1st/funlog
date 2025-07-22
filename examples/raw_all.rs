@@ -9,7 +9,7 @@ fn main() {
     test(1, 2);
 }
 
-#[funlog(debug, onStartEnd, all)]
+#[funlog(all)]
 fn test(a: i32, b: i32) -> i32 {
     println!("Hello, world! a={}, b={}", a, b);
     a + b

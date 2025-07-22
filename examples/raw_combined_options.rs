@@ -3,14 +3,14 @@ use std::env::set_var;
 
 fn main() {
     unsafe {
-        set_var("RUST_LOG", "debug");
+        set_var("RUST_LOG", "info");
     }
     env_logger::init();
-    test(1, 2);
+    test(10, 20);
 }
 
-#[funlog(debug, onStartEnd, all)]
+#[funlog(info, onStartEnd, params(a), retVal)]
 fn test(a: i32, b: i32) -> i32 {
-    println!("Hello, world! a={}, b={}", a, b);
+    println!("Computing: {} + {}", a, b);
     a + b
 }
