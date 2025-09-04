@@ -1,0 +1,81 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  create-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Cache cargo registry
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-release-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Build and test
+      run: |
+        cargo build --release
+        cargo test --all-features
+
+    - name: Generate changelog
+      id: changelog
+      run: |
+        # Extract version from tag
+        VERSION=${GITHUB_REF#refs/tags/v}
+        echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+        
+        # Generate changelog from git commits since last tag
+        LAST_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+        if [ -n "$LAST_TAG" ]; then
+          CHANGELOG=$(git log --pretty=format:"- %s" $LAST_TAG..HEAD)
+        else
+          CHANGELOG=$(git log --pretty=format:"- %s")
+        fi
+        
+        # Create release notes
+        cat > release_notes.md << EOF
+        ## What's Changed
+        
+        $CHANGELOG
+        
+        ## Installation
+        
+        Add this to your \`Cargo.toml\`:
+        
+        \`\`\`toml
+        [dependencies]
+        funlog = "$VERSION"
+        \`\`\`
+        
+        ## Documentation
+        
+        - [README (English)](https://github.com/koory1st/funlog/blob/v$VERSION/README_EN.md)
+        - [README (中文)](https://github.com/koory1st/funlog/blob/v$VERSION/README.md)
+        - [Examples](https://github.com/koory1st/funlog/tree/v$VERSION/examples)
+        - [API Documentation](https://docs.rs/funlog/$VERSION)
+        EOF
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ github.ref }}
+        name: Release v${{ steps.changelog.outputs.VERSION }}
+        body_path: release_notes.md
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -6,8 +6,18 @@ description = "A procedural macro for tracing Rust function calls"
 authors = ["Levy Gu <32436334@qq.com>"]
 license = "MIT"
 repository = "https://github.com/koory1st/funlog"
-keywords = ["logging", "tracing", "proc-macro"]
-categories = ["development-tools::debugging"]
+homepage = "https://github.com/koory1st/funlog"
+documentation = "https://docs.rs/funlog"
+readme = "README.md"
+keywords = ["logging", "tracing", "proc-macro", "debugging", "instrumentation"]
+categories = ["development-tools::debugging", "development-tools::procedural-macro-helpers"]
+exclude = [
+    "tests/",
+    "examples/",
+    ".github/",
+    "run_tests.sh",
+    "COMPLETION_SUMMARY.md"
+]
 
 [lib]
 proc-macro = true

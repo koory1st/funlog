@@ -2,25 +2,44 @@ name: Publish to crates.io
 
 on:
   push:
-    branches:
-      - main
-    paths:
-      - 'Cargo.toml'
-      - 'src/**'
-      - '.github/workflows/publish.yml'
+    tags:
+      - 'v*'
 
 jobs:
   publish:
     name: Publish to crates.io
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Cache cargo registry
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
       - name: Run tests
         run: cargo test --all-features
+
+      - name: Run examples
+        run: |
+          chmod +x ./run_tests.sh
+          ./run_tests.sh
+
+      - name: Check if version matches tag
+        run: |
+          CARGO_VERSION=$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[0].version')
+          TAG_VERSION=${GITHUB_REF#refs/tags/v}
+          if [ "$CARGO_VERSION" != "$TAG_VERSION" ]; then
+            echo "Version mismatch: Cargo.toml has $CARGO_VERSION but tag is $TAG_VERSION"
+            exit 1
+          fi
 
       - name: Publish to crates.io
         run: cargo publish --token ${CRATES_TOKEN}
