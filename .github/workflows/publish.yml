@@ -42,6 +42,7 @@ jobs:
           fi
 
       - name: Publish to crates.io
-        run: cargo publish --token ${CRATES_TOKEN}
-        env:
-          CRATES_TOKEN: ${{ secrets.CRATES_TOKEN }}
+        run: |
+          echo "Publishing version: $(cargo metadata --no-deps --format-version 1 | jq -r '.packages[0].version')"
+          cargo publish --token ${{ secrets.CRATES_TOKEN }} --dry-run
+          cargo publish --token ${{ secrets.CRATES_TOKEN }}
