@@ -3,7 +3,12 @@ use std::env::set_var;
 
 #[funlog(info, all, retVal, onStartEnd)]
 fn complex_function(name: &str, age: u32, active: bool) -> String {
-    format!("{} is {} years old and {}", name, age, if active { "active" } else { "inactive" })
+    format!(
+        "{} is {} years old and {}",
+        name,
+        age,
+        if active { "active" } else { "inactive" }
+    )
 }
 
 #[funlog(warn, params(x), retVal, onEnd)]
@@ -24,13 +29,19 @@ mod tests {
         mock_logger::init();
         let result = complex_function("Alice", 30, true);
         assert_eq!(result, "Alice is 30 years old and active");
-        
+
         MockLogger::entries(|entries| {
             assert_eq!(entries.len(), 2);
             assert_eq!(entries[0].level, log::Level::Info);
-            assert_eq!(entries[0].body, "complex_function [in ]: name:Alice, age:30, active:true");
+            assert_eq!(
+                entries[0].body,
+                "complex_function [in ]: name:Alice, age:30, active:true"
+            );
             assert_eq!(entries[1].level, log::Level::Info);
-            assert_eq!(entries[1].body, "complex_function [out]: return:Alice is 30 years old and active");
+            assert_eq!(
+                entries[1].body,
+                "complex_function [out]: return:Alice is 30 years old and active"
+            );
         });
     }
 
@@ -42,7 +53,7 @@ mod tests {
         mock_logger::init();
         let result = power(2, 8);
         assert_eq!(result, 256);
-        
+
         MockLogger::entries(|entries| {
             assert_eq!(entries.len(), 1);
             assert_eq!(entries[0].level, log::Level::Warn);

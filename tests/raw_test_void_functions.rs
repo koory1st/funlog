@@ -4,7 +4,7 @@ use std::env::set_var;
 #[funlog(debug, all)]
 fn print_message(msg: &str, count: u32) {
     for i in 0..count {
-        println!("{}: {}", i, msg);
+        println!("{i}: {msg}");
     }
 }
 
@@ -16,7 +16,7 @@ fn initialize_system() {
 
 #[funlog(warn, params(level), onEnd)]
 fn log_event(level: &str, message: &str) {
-    println!("[{}] {}", level, message);
+    println!("[{level}] {message}");
 }
 
 #[cfg(test)]
@@ -31,7 +31,7 @@ mod tests {
         }
         mock_logger::init();
         print_message("test", 2);
-        
+
         MockLogger::entries(|entries| {
             assert_eq!(entries.len(), 2);
             assert_eq!(entries[0].level, log::Level::Debug);
@@ -48,7 +48,7 @@ mod tests {
         }
         mock_logger::init();
         initialize_system();
-        
+
         MockLogger::entries(|entries| {
             assert_eq!(entries.len(), 1);
             assert_eq!(entries[0].level, log::Level::Info);
@@ -63,7 +63,7 @@ mod tests {
         }
         mock_logger::init();
         log_event("ERROR", "Something went wrong");
-        
+
         MockLogger::entries(|entries| {
             assert_eq!(entries.len(), 1);
             assert_eq!(entries[0].level, log::Level::Warn);

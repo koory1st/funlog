@@ -11,6 +11,6 @@ fn main() {
 
 #[funlog(debug, params(a, c))]
 fn test(a: i32, b: i32, c: i32) -> i32 {
-    println!("Hello, world! a={}, b={}, c={}", a, b, c);
+    println!("Hello, world! a={a}, b={b}, c={c}");
     a + b + c
 }

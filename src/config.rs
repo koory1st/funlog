@@ -4,6 +4,7 @@ use syn::{punctuated::Punctuated, token::Comma, Ident};
 use syn::{Block, FnArg, ReturnType};
 
 #[derive(Debug)]
+#[allow(clippy::enum_variant_names)]
 pub enum OutputPosition {
     OnStart,
     OnEnd,
@@ -51,30 +52,35 @@ impl Config {
 
         let inner_func_name = format_ident!("__{}__", func_name);
         let inner_func: proc_macro2::TokenStream = quote! {
+            #[allow(clippy::too_many_arguments)]
             fn #inner_func_name(#func_params_for_declare) #func_return_type {
                 #func_block
             }
         };
         let func_declare_start = quote! {
+            #[allow(clippy::too_many_arguments)]
             #func_vis fn #func_name(#func_params_for_declare) #func_return_type
         };
         // Fix: If func_params_for_invoke is empty, extract parameters from func_params_for_declare
         // This handles the case where the ConfigBuilder didn't properly populate func_params_for_invoke
         let actual_params_for_invoke = if func_params_for_invoke.is_empty() {
-            func_params_for_declare.iter().filter_map(|arg| match arg {
-                syn::FnArg::Typed(syn::PatType { pat, .. }) => {
-                    if let syn::Pat::Ident(syn::PatIdent { ident, .. }) = pat.as_ref() {
-                        Some(ident.clone())
-                    } else {
-                        None
+            func_params_for_declare
+                .iter()
+                .filter_map(|arg| match arg {
+                    syn::FnArg::Typed(syn::PatType { pat, .. }) => {
+                        if let syn::Pat::Ident(syn::PatIdent { ident, .. }) = pat.as_ref() {
+                            Some(ident.clone())
+                        } else {
+                            None
+                        }
                     }
-                }
-                _ => None,
-            }).collect::<Vec<_>>()
+                    _ => None,
+                })
+                .collect::<Vec<_>>()
         } else {
             func_params_for_invoke.clone()
         };
-        
+
         let func_declare_body = quote! {
             let output = #inner_func_name(#(#actual_params_for_invoke,) *);
         };
@@ -103,17 +109,17 @@ impl Config {
             },
         };
 
-        let function_name_str = format!("{}", func_name);
+        let function_name_str = format!("{func_name}");
 
         let parameters_placeholder_for_output = func_params_for_output
             .iter()
-            .map(|p| format!("{}:{{}}", p))
+            .map(|p| format!("{p}:{{}}"))
             .collect::<Vec<String>>()
             .join(", ");
 
         let return_placeholder = match func_return_type {
             syn::ReturnType::Default => String::new(),
-            _ => format!("return:{{}}"),
+            _ => "return:{}".to_string(),
         };
 
         let (func_output_start, func_output_end) = match (
@@ -124,7 +130,7 @@ impl Config {
         ) {
             (OutputPosition::OnStart, _, _, 0) => {
                 // test() [in ]
-                let template = format!("{} [in ]", function_name_str);
+                let template = format!("{function_name_str} [in ]");
                 (
                     quote! {
                         #log_method(#template);
@@ -134,10 +140,8 @@ impl Config {
             }
             (OutputPosition::OnStart, _, _, _) => {
                 // test() [in]: a:1, b:2
-                let template = format!(
-                    "{} [in ]: {}",
-                    function_name_str, parameters_placeholder_for_output
-                );
+                let template =
+                    format!("{function_name_str} [in ]: {parameters_placeholder_for_output}");
                 (
                     quote! {
                         #log_method(#template, #(#func_params_for_output,)*);
@@ -147,7 +151,7 @@ impl Config {
             }
             (OutputPosition::OnEnd, ReturnType::Default, _, 0) => {
                 // test() [out]
-                let template = format!("{} [out]", function_name_str);
+                let template = format!("{function_name_str} [out]");
                 (
                     quote! {},
                     quote! {
@@ -157,10 +161,8 @@ impl Config {
             }
             (OutputPosition::OnEnd, ReturnType::Default, _, _) => {
                 // test() [out]: a:1, b:2
-                let template = format!(
-                    "{} [out] {}",
-                    function_name_str, parameters_placeholder_for_output
-                );
+                let template =
+                    format!("{function_name_str} [out] {parameters_placeholder_for_output}");
                 (
                     quote! {},
                     quote! {
@@ -170,7 +172,7 @@ impl Config {
             }
             (OutputPosition::OnEnd, _, true, 0) => {
                 // test() [out]: return:3
-                let template = format!("{} [out]: {}", function_name_str, return_placeholder);
+                let template = format!("{function_name_str} [out]: {return_placeholder}");
                 (
                     quote! {},
                     quote! {
@@ -180,7 +182,7 @@ impl Config {
             }
             (OutputPosition::OnEnd, _, false, 0) => {
                 // test() [out]
-                let template = format!("{} [out]", function_name_str);
+                let template = format!("{function_name_str} [out]");
                 (
                     quote! {},
                     quote! {
@@ -190,10 +192,7 @@ impl Config {
             }
             (OutputPosition::OnEnd, _, true, _) => {
                 // test() [out]: a:1, b:2, return:3
-                let template = format!(
-                    "{} [out]: {}, {}",
-                    function_name_str, parameters_placeholder_for_output, return_placeholder
-                );
+                let template = format!("{function_name_str} [out]: {parameters_placeholder_for_output}, {return_placeholder}");
                 (
                     quote! {},
                     quote! {
@@ -203,10 +202,8 @@ impl Config {
             }
             (OutputPosition::OnEnd, _, false, _) => {
                 // test() [out]: a:1, b:2
-                let template = format!(
-                    "{} [out]: {}",
-                    function_name_str, parameters_placeholder_for_output
-                );
+                let template =
+                    format!("{function_name_str} [out]: {parameters_placeholder_for_output}");
                 (
                     quote! {},
                     quote! {
@@ -217,8 +214,8 @@ impl Config {
             (OutputPosition::OnStartAndEnd, ReturnType::Default, _, 0) => {
                 // test() [in ]
                 // test() [out]
-                let template_in = format!("{} [in ]", function_name_str);
-                let template_out = format!("{} [out]", function_name_str);
+                let template_in = format!("{function_name_str} [in ]");
+                let template_out = format!("{function_name_str} [out]");
                 (
                     quote! {
                         #log_method(#template_in);
@@ -231,11 +228,9 @@ impl Config {
             (OutputPosition::OnStartAndEnd, ReturnType::Default, _, _) => {
                 // test() [in ]: a:1, b:2
                 // test() [out]
-                let template_in = format!(
-                    "{} [in ]: {}",
-                    function_name_str, parameters_placeholder_for_output
-                );
-                let template_out = format!("{} [out]", function_name_str);
+                let template_in =
+                    format!("{function_name_str} [in ]: {parameters_placeholder_for_output}");
+                let template_out = format!("{function_name_str} [out]");
                 (
                     quote! {
                         #log_method(#template_in, #(#func_params_for_output,)*);
@@ -248,8 +243,8 @@ impl Config {
             (OutputPosition::OnStartAndEnd, _, true, 0) => {
                 // test() [in ]
                 // test() [out]: return:3
-                let template_in = format!("{} [in ]", function_name_str);
-                let template_out = format!("{} [out]: {}", function_name_str, return_placeholder);
+                let template_in = format!("{function_name_str} [in ]");
+                let template_out = format!("{function_name_str} [out]: {return_placeholder}");
                 (
                     quote! {
                         #log_method(#template_in);
@@ -262,8 +257,8 @@ impl Config {
             (OutputPosition::OnStartAndEnd, _, false, 0) => {
                 // test() [in ]
                 // test() [out]
-                let template_in = format!("{} [in ]", function_name_str);
-                let template_out = format!("{} [out]", function_name_str);
+                let template_in = format!("{function_name_str} [in ]");
+                let template_out = format!("{function_name_str} [out]");
                 (
                     quote! {
                         #log_method(#template_in);
@@ -276,11 +271,9 @@ impl Config {
             (OutputPosition::OnStartAndEnd, _, true, _) => {
                 // test() [in ]: a:1, b:2
                 // test() [out]: return:3
-                let template_in = format!(
-                    "{} [in ]: {}",
-                    function_name_str, parameters_placeholder_for_output
-                );
-                let template_out = format!("{} [out]: {}", function_name_str, return_placeholder);
+                let template_in =
+                    format!("{function_name_str} [in ]: {parameters_placeholder_for_output}");
+                let template_out = format!("{function_name_str} [out]: {return_placeholder}");
                 (
                     quote! {
                         #log_method(#template_in, #(#func_params_for_output,)*);
@@ -293,11 +286,9 @@ impl Config {
             (OutputPosition::OnStartAndEnd, _, false, _) => {
                 // test() [in ]: a:1, b:2
                 // test() [out]
-                let template_in = format!(
-                    "{} [in ]: {}",
-                    function_name_str, parameters_placeholder_for_output
-                );
-                let template_out = format!("{} [out]", function_name_str);
+                let template_in =
+                    format!("{function_name_str} [in ]: {parameters_placeholder_for_output}");
+                let template_out = format!("{function_name_str} [out]");
                 (
                     quote! {
                         #log_method(#template_in, #(#func_params_for_output,)*);

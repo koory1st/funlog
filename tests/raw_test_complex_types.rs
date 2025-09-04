@@ -1,6 +1,6 @@
 use funlog::funlog;
-use std::env::set_var;
 use std::collections::HashMap;
+use std::env::set_var;
 
 #[derive(Debug)]
 struct User {
@@ -16,12 +16,12 @@ impl std::fmt::Display for User {
 
 #[funlog(debug, params(user))]
 fn process_user(user: &User, metadata: HashMap<String, String>) -> bool {
-    println!("Processing user: {:?} with metadata: {:?}", user, metadata);
+    println!("Processing user: {user:?} with metadata: {metadata:?}");
     true
 }
 
 #[funlog(info, params(multiplier))]
-fn sum_vector(numbers: &Vec<i32>, multiplier: f64) -> f64 {
+fn sum_vector(numbers: &[i32], multiplier: f64) -> f64 {
     numbers.iter().sum::<i32>() as f64 * multiplier
 }
 
@@ -41,19 +41,25 @@ mod tests {
             set_var("RUST_LOG", "debug");
         }
         mock_logger::init();
-        
-        let user = User { id: 1, name: "Alice".to_string() };
+
+        let user = User {
+            id: 1,
+            name: "Alice".to_string(),
+        };
         let mut metadata = HashMap::new();
         metadata.insert("role".to_string(), "admin".to_string());
-        
+
         let result = process_user(&user, metadata);
-        assert_eq!(result, true);
-        
+        assert!(result);
+
         MockLogger::entries(|entries| {
             assert_eq!(entries.len(), 2);
             assert_eq!(entries[0].level, log::Level::Debug);
             // Note: Only user parameter is logged due to params(user)
-            assert_eq!(entries[0].body, "process_user [in ]: user:User(id:1, name:Alice)");
+            assert_eq!(
+                entries[0].body,
+                "process_user [in ]: user:User(id:1, name:Alice)"
+            );
             assert_eq!(entries[1].level, log::Level::Debug);
             assert_eq!(entries[1].body, "process_user [out]");
         });
@@ -65,11 +71,11 @@ mod tests {
             set_var("RUST_LOG", "info");
         }
         mock_logger::init();
-        
+
         let numbers = vec![1, 2, 3, 4, 5];
         let result = sum_vector(&numbers, 2.5);
         assert_eq!(result, 37.5);
-        
+
         MockLogger::entries(|entries| {
             assert_eq!(entries.len(), 2);
             assert_eq!(entries[0].level, log::Level::Info);
@@ -85,17 +91,20 @@ mod tests {
             set_var("RUST_LOG", "warn");
         }
         mock_logger::init();
-        
+
         let user = create_user(42, "Bob".to_string());
         assert_eq!(user.id, 42);
         assert_eq!(user.name, "Bob");
-        
+
         MockLogger::entries(|entries| {
             assert_eq!(entries.len(), 2);
             assert_eq!(entries[0].level, log::Level::Warn);
             assert_eq!(entries[0].body, "create_user [in ]");
             assert_eq!(entries[1].level, log::Level::Warn);
-            assert_eq!(entries[1].body, "create_user [out]: return:User(id:42, name:Bob)");
+            assert_eq!(
+                entries[1].body,
+                "create_user [out]: return:User(id:42, name:Bob)"
+            );
         });
     }
 }

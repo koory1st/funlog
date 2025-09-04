@@ -31,33 +31,32 @@ pub struct ConfigBuilder {
 impl ConfigBuilder {
     pub fn param_config(&mut self, param_config: ParameterEnum) {
         if let Some(v) = &self.param_config {
-            panic!("Parameter config already set: {:?}", v);
+            panic!("Parameter config already set: {v:?}");
         }
         self.param_config = Some(param_config);
     }
 
     pub fn output_type(&mut self, output_type: OutputType) {
         if let Some(v) = &self.output_type {
-            panic!("Output type already set: {:?}", v);
+            panic!("Output type already set: {v:?}");
         }
         self.output_type = Some(output_type);
     }
 
     pub fn output_position(&mut self, output_position: OutputPosition) {
         if let Some(v) = &self.output_position {
-            panic!("Output position already set: {:?}", v);
+            panic!("Output position already set: {v:?}");
         }
         self.output_position = Some(output_position);
     }
     pub fn output_ret_value(&mut self, output_ret_value: bool) {
         if let Some(v) = &self.output_ret_value {
-            panic!("Output return value already set: {:?}", v);
+            panic!("Output return value already set: {v:?}");
         }
         self.output_ret_value = Some(output_ret_value);
     }
     pub fn build(self) -> Config {
-        if let Some(ParameterEnum::AllParameters) = self.param_config {
-        }
+        if let Some(ParameterEnum::AllParameters) = self.param_config {}
         Config {
             output_position: self
                 .output_position
@@ -80,9 +79,7 @@ impl ConfigBuilder {
     pub fn from(meta_list: Punctuated<Meta, Comma>, func: GenericsFn) -> Result<Self, syn::Error> {
         let mut builder = ConfigBuilder::default();
         builder.set_function_fields(func);
-        if let Err(e) = builder.parse_meta_list(meta_list) {
-            return Err(e);
-        }
+        builder.parse_meta_list(meta_list)?;
         Ok(builder)
     }
 
@@ -143,10 +140,7 @@ impl ConfigBuilder {
                     if path.is_ident("params") {
                         let parser = Punctuated::<Ident, Comma>::parse_terminated;
                         let idents = parser.parse2(tokens.clone()).map_err(|e| {
-                            syn::Error::new_spanned(
-                                tokens,
-                                format!("Failed to parse params: {}", e),
-                            )
+                            syn::Error::new_spanned(tokens, format!("Failed to parse params: {e}"))
                         })?;
                         let params = idents
                             .into_iter()

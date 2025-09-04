@@ -2,7 +2,7 @@ use funlog::funlog;
 
 fn main() {
     let result = test();
-    println!("Final result: {}", result);
+    println!("Final result: {result}");
 }
 
 #[funlog(print, retVal)]

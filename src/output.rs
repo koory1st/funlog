@@ -1,5 +1,5 @@
-use proc_macro2::TokenStream as TokenStream2;
 use proc_macro::TokenStream;
+use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
 pub struct Output {
     pub inner_func: TokenStream2,
@@ -10,8 +10,8 @@ pub struct Output {
     pub func_declare_end: TokenStream2,
 }
 
-impl Into<TokenStream> for Output {
-    fn into(self) -> TokenStream {
+impl From<Output> for TokenStream {
+    fn from(val: Output) -> Self {
         let Output {
             inner_func,
             func_declare_start,
@@ -19,7 +19,7 @@ impl Into<TokenStream> for Output {
             func_declare_body,
             func_output_end,
             func_declare_end,
-        } = self;
+        } = val;
         let ts2 = quote! {
             #inner_func
             #func_declare_start {

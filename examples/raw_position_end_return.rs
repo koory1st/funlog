@@ -11,6 +11,6 @@ fn main() {
 
 #[funlog(debug, onEnd)]
 fn test_return(a: i32, b: i32) -> i32 {
-    println!("Hello, world! a={}, b={}", a, b);
+    println!("Hello, world! a={a}, b={b}");
     a + b
 }

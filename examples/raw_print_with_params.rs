@@ -6,6 +6,6 @@ fn main() {
 
 #[funlog(print, all)]
 fn test(x: i32, y: i32) -> i32 {
-    println!("Calculating: {} * {}", x, y);
+    println!("Calculating: {x} * {y}");
     x * y
 }

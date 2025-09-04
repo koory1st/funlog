@@ -13,6 +13,6 @@ fn test_no_params() -> i32 {
 
 #[funlog(print, none)]
 fn test_with_params(a: i32, b: i32) -> i32 {
-    println!("With params function: {} + {}", a, b);
+    println!("With params function: {a} + {b}");
     a + b
 }

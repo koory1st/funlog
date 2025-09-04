@@ -6,15 +6,15 @@ fn main() {
         set_var("RUST_LOG", "debug");
     }
     env_logger::init();
-    
+
     match divide(10, 2) {
-        Ok(result) => println!("Success: {}", result),
-        Err(e) => println!("Error: {}", e),
+        Ok(result) => println!("Success: {result}"),
+        Err(e) => println!("Error: {e}"),
     }
-    
+
     match divide(10, 0) {
-        Ok(result) => println!("Success: {}", result),
-        Err(e) => println!("Error: {}", e),
+        Ok(result) => println!("Success: {result}"),
+        Err(e) => println!("Error: {e}"),
     }
 }
 

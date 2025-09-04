@@ -6,13 +6,13 @@ fn main() {
         set_var("RUST_LOG", "debug");
     }
     env_logger::init();
-    
+
     println!("=== Testing onStart ===");
     test_start(1, 2);
-    
+
     println!("\n=== Testing onEnd ===");
     test_end(3, 4);
-    
+
     println!("\n=== Testing onStartEnd ===");
     test_both(5, 6);
 }

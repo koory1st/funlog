@@ -11,5 +11,5 @@ fn main() {
 
 #[funlog(debug, all)]
 fn test(num: i32, msg: &str) {
-    println!("Processing: {} - {}", num, msg);
+    println!("Processing: {num} - {msg}");
 }

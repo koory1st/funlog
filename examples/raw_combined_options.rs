@@ -11,6 +11,6 @@ fn main() {
 
 #[funlog(info, onStartEnd, params(a), retVal)]
 fn test(a: i32, b: i32) -> i32 {
-    println!("Computing: {} + {}", a, b);
+    println!("Computing: {a} + {b}");
     a + b
 }

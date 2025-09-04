@@ -14,6 +14,7 @@ fn single_param(x: i32) -> i32 {
 }
 
 // Test function with many parameters
+#[allow(clippy::too_many_arguments)]
 #[funlog(warn, params(a, e, h))]
 fn many_params(a: i32, b: i32, c: i32, d: i32, e: i32, f: i32, g: i32, h: i32) -> i32 {
     a + b + c + d + e + f + g + h
@@ -38,7 +39,7 @@ mod tests {
         mock_logger::init();
         let result = no_params();
         assert_eq!(result, 42);
-        
+
         MockLogger::entries(|entries| {
             assert_eq!(entries.len(), 2);
             assert_eq!(entries[0].level, log::Level::Debug);
@@ -56,7 +57,7 @@ mod tests {
         mock_logger::init();
         let result = single_param(21);
         assert_eq!(result, 42);
-        
+
         MockLogger::entries(|entries| {
             assert_eq!(entries.len(), 2);
             assert_eq!(entries[0].level, log::Level::Info);
@@ -74,7 +75,7 @@ mod tests {
         mock_logger::init();
         let result = many_params(1, 2, 3, 4, 5, 6, 7, 8);
         assert_eq!(result, 36);
-        
+
         MockLogger::entries(|entries| {
             assert_eq!(entries.len(), 2);
             assert_eq!(entries[0].level, log::Level::Warn);
@@ -92,7 +93,7 @@ mod tests {
         mock_logger::init();
         let result = string_function("test".to_string());
         assert_eq!(result, "TEST");
-        
+
         MockLogger::entries(|entries| {
             assert_eq!(entries.len(), 2);
             assert_eq!(entries[0].level, log::Level::Error);

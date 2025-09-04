@@ -24,7 +24,7 @@ mod tests {
         mock_logger::init();
         let result = square(5);
         assert_eq!(result, 25);
-        
+
         MockLogger::entries(|entries| {
             assert_eq!(entries.len(), 2);
             assert_eq!(entries[0].level, log::Level::Debug);
@@ -42,7 +42,7 @@ mod tests {
         mock_logger::init();
         let result = cube(3);
         assert_eq!(result, 27);
-        
+
         MockLogger::entries(|entries| {
             assert_eq!(entries.len(), 1);
             assert_eq!(entries[0].level, log::Level::Debug);

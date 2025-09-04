@@ -13,7 +13,7 @@ use syn::{parse_macro_input, ItemFn};
 
 #[proc_macro_attribute]
 pub fn funlog(args: TokenStream, item: TokenStream) -> TokenStream {
-    let is_debug = if cfg!(debug_assertions) { true } else { false };
+    let is_debug = cfg!(debug_assertions);
 
     // when not debug, just return the original function
     if !is_debug {

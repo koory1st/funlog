@@ -6,7 +6,7 @@ fn main() {
         set_var("RUST_LOG", "trace");
     }
     env_logger::init();
-    
+
     println!("=== Testing different log levels ===");
     test_trace();
     test_debug();

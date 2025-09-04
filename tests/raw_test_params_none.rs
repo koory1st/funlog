@@ -19,7 +19,7 @@ mod tests {
         mock_logger::init();
         let result = multiply(4, 7);
         assert_eq!(result, 28);
-        
+
         MockLogger::entries(|entries| {
             assert_eq!(entries.len(), 2);
             assert_eq!(entries[0].level, log::Level::Debug);
