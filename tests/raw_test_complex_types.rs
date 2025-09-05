@@ -25,7 +25,7 @@ fn sum_vector(numbers: &[i32], multiplier: f64) -> f64 {
     numbers.iter().sum::<i32>() as f64 * multiplier
 }
 
-#[funlog(warn, retVal)]
+#[funlog(warn, none, retVal)]
 fn create_user(id: u32, name: String) -> User {
     User { id, name }
 }
@@ -58,7 +58,7 @@ mod tests {
             // Note: Only user parameter is logged due to params(user)
             assert_eq!(
                 entries[0].body,
-                "process_user [in ]: user:User(id:1, name:Alice)"
+                "process_user [in ]: user:User { id: 1, name: \"Alice\" }"
             );
             assert_eq!(entries[1].level, log::Level::Debug);
             assert_eq!(entries[1].body, "process_user [out]");
@@ -103,7 +103,7 @@ mod tests {
             assert_eq!(entries[1].level, log::Level::Warn);
             assert_eq!(
                 entries[1].body,
-                "create_user [out]: return:User(id:42, name:Bob)"
+                "create_user [out]: return:User { id: 42, name: \"Bob\" }"
             );
         });
     }

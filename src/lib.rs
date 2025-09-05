@@ -1,6 +1,8 @@
 mod config;
 mod config_builder;
+mod error;
 mod generics_item_fn;
+mod log_template;
 mod output;
 
 use config_builder::ConfigBuilder;
@@ -25,11 +27,19 @@ pub fn funlog(args: TokenStream, item: TokenStream) -> TokenStream {
     let attr_meta: Punctuated<Meta, Comma> =
         parse_macro_input!(args with Punctuated::<Meta, Comma>::parse_terminated);
     match ConfigBuilder::from(attr_meta, func) {
-        Ok(config_builder) => {
-            let config = config_builder.build();
-            let output = config.to_output();
-            output.into()
+        Ok(config_builder) => match config_builder.build() {
+            Ok(config) => {
+                let output = config.to_output();
+                output.into()
+            }
+            Err(e) => {
+                let syn_error: syn::Error = e.into();
+                syn_error.into_compile_error().into()
+            }
+        },
+        Err(e) => {
+            let syn_error: syn::Error = e.into();
+            syn_error.into_compile_error().into()
         }
-        Err(e) => e.into_compile_error().into(),
     }
 }

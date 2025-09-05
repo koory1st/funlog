@@ -5,42 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-
-## [0.1.0] - 2024-12-XX
+## [0.2.0] - 2025-01-09
 
 ### Added
-- Initial release of funlog procedural macro
-- Support for multiple log levels: trace, debug, info, warn, error, print
-- Flexible parameter logging options: all, none, specific parameters
-- Position control: onStart, onEnd, onStartEnd
-- Return value logging with retVal option
-- Zero runtime overhead in release builds
-- Comprehensive test suite with 25+ test cases
-- Rich examples demonstrating all features
-- Complete documentation in English and Chinese
+- New `ConfigError` type for better error handling
+- `LogTemplate` struct for cleaner template generation logic
+- Improved parameter value preservation for end-position logging
 
-### Features
-- **Log Levels**: Support for standard log levels plus print mode
-- **Parameter Control**: Choose which parameters to log
-- **Position Control**: Control when logging occurs in function execution
-- **Return Values**: Optional return value logging
-- **Debug Only**: Macro only active in debug builds
-- **Easy Integration**: Simple attribute macro syntax
+### Changed
+- **BREAKING**: `ConfigBuilder` methods now return `Result<(), ConfigError>` instead of panicking
+- Improved error messages with more descriptive context
+- Enhanced parameter formatting using `{:?}` for better debug output
+- Refactored complex pattern matching logic into dedicated structures
 
-### Documentation
-- Complete README in English and Chinese
-- Comprehensive examples directory
-- API documentation
-- Contributing guidelines
-- Security audit workflows
+### Fixed
+- Fixed move semantics issues where parameters couldn't be used in logs after being moved
+- Resolved all clippy warnings
+- Fixed parameter value handling for different output positions
+- Improved memory efficiency by only saving parameter values when needed
 
-### Testing
-- 19 active test cases covering all functionality
-- Cross-platform testing (Linux, Windows, macOS)
-- Multiple Rust version support (stable, beta, nightly)
-- Automated CI/CD pipeline
-- Code coverage reporting
+### Removed
+- Removed `panic!` calls in favor of proper error handling
+- Cleaned up unused code and redundant logic
 
-[Unreleased]: https://github.com/koory1st/funlog/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/koory1st/funlog/releases/tag/v0.1.0
+## [0.1.3] - Previous Release
+- Initial stable release with basic functionality

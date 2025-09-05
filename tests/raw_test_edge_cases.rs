@@ -97,7 +97,7 @@ mod tests {
         MockLogger::entries(|entries| {
             assert_eq!(entries.len(), 2);
             assert_eq!(entries[0].level, log::Level::Error);
-            assert_eq!(entries[0].body, "string_function [in ]: value:test");
+            assert_eq!(entries[0].body, "string_function [in ]: value:\"test\"");
             assert_eq!(entries[1].level, log::Level::Error);
             assert_eq!(entries[1].body, "string_function [out]");
         });

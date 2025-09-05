@@ -35,12 +35,12 @@ mod tests {
             assert_eq!(entries[0].level, log::Level::Info);
             assert_eq!(
                 entries[0].body,
-                "complex_function [in ]: name:Alice, age:30, active:true"
+                "complex_function [in ]: name:\"Alice\", age:30, active:true"
             );
             assert_eq!(entries[1].level, log::Level::Info);
             assert_eq!(
                 entries[1].body,
-                "complex_function [out]: return:Alice is 30 years old and active"
+                "complex_function [out]: return:\"Alice is 30 years old and active\""
             );
         });
     }

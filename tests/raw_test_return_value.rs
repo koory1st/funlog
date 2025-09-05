@@ -1,12 +1,12 @@
 use funlog::funlog;
 use std::env::set_var;
 
-#[funlog(debug, retVal)]
+#[funlog(debug, none, retVal)]
 fn square(x: i32) -> i32 {
     x * x
 }
 
-#[funlog(debug, retVal, onEnd)]
+#[funlog(debug, none, retVal, onEnd)]
 fn cube(x: i32) -> i32 {
     x * x * x
 }

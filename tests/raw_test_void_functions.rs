@@ -35,7 +35,7 @@ mod tests {
         MockLogger::entries(|entries| {
             assert_eq!(entries.len(), 2);
             assert_eq!(entries[0].level, log::Level::Debug);
-            assert_eq!(entries[0].body, "print_message [in ]: msg:test, count:2");
+            assert_eq!(entries[0].body, "print_message [in ]: msg:\"test\", count:2");
             assert_eq!(entries[1].level, log::Level::Debug);
             assert_eq!(entries[1].body, "print_message [out]");
         });
@@ -67,7 +67,7 @@ mod tests {
         MockLogger::entries(|entries| {
             assert_eq!(entries.len(), 1);
             assert_eq!(entries[0].level, log::Level::Warn);
-            assert_eq!(entries[0].body, "log_event [out] level:ERROR");
+            assert_eq!(entries[0].body, "log_event [out]: level:\"ERROR\"");
         });
     }
 }
