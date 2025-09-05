@@ -30,24 +30,100 @@ pub struct ConfigBuilder {
 }
 
 impl ConfigBuilder {
+    /// Sets the parameter configuration for the function logging.
+    /// 
+    /// # Arguments
+    /// 
+    /// * `param_config` - The parameter configuration enum specifying how parameters should be handled
+    /// 
+    /// # Returns
+    /// 
+    /// Returns `Ok(())` on success, or `ConfigError` if there's an issue
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// use funlog::config_builder::{ConfigBuilder, ParameterEnum};
+    /// 
+    /// let mut builder = ConfigBuilder::default();
+    /// assert!(builder.param_config(ParameterEnum::AllParameters).is_ok());
+    /// ```
     pub fn param_config(&mut self, param_config: ParameterEnum) -> Result<(), ConfigError> {
         // Don't check conflicts here, check them uniformly in parse_meta_list
         self.param_config = Some(param_config);
         Ok(())
     }
 
+    /// Sets the output type for logging (print, debug, info, etc.).
+    /// 
+    /// # Arguments
+    /// 
+    /// * `output_type` - The type of output to use for logging
+    /// 
+    /// # Returns
+    /// 
+    /// Returns `Ok(())` on success, or `ConfigError` if there's an issue
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// use funlog::config_builder::ConfigBuilder;
+    /// use funlog::config::OutputType;
+    /// 
+    /// let mut builder = ConfigBuilder::default();
+    /// assert!(builder.output_type(OutputType::Debug).is_ok());
+    /// ```
     pub fn output_type(&mut self, output_type: OutputType) -> Result<(), ConfigError> {
         // Don't check conflicts here, check them uniformly in parse_meta_list
         self.output_type = Some(output_type);
         Ok(())
     }
 
+    /// Sets the position where logging output should occur.
+    /// 
+    /// # Arguments
+    /// 
+    /// * `output_position` - The position for logging (OnStart, OnEnd, or OnStartAndEnd)
+    /// 
+    /// # Returns
+    /// 
+    /// Returns `Ok(())` on success, or `ConfigError` if there's an issue
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// use funlog::config_builder::ConfigBuilder;
+    /// use funlog::config::OutputPosition;
+    /// 
+    /// let mut builder = ConfigBuilder::default();
+    /// assert!(builder.output_position(OutputPosition::OnStart).is_ok());
+    /// ```
     pub fn output_position(&mut self, output_position: OutputPosition) -> Result<(), ConfigError> {
         // Don't check conflicts here, check them uniformly in parse_meta_list
         self.output_position = Some(output_position);
         Ok(())
     }
 
+    /// Sets whether to output the return value in logging.
+    /// 
+    /// # Arguments
+    /// 
+    /// * `output_ret_value` - Whether to include return value in the log output
+    /// 
+    /// # Returns
+    /// 
+    /// Returns `Ok(())` on success, or `ConfigError::AlreadySet` if already configured
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// use funlog::config_builder::ConfigBuilder;
+    /// 
+    /// let mut builder = ConfigBuilder::default();
+    /// assert!(builder.output_ret_value(true).is_ok());
+    /// // Setting it again should fail
+    /// assert!(builder.output_ret_value(false).is_err());
+    /// ```
     pub fn output_ret_value(&mut self, output_ret_value: bool) -> Result<(), ConfigError> {
         if self.output_ret_value.is_some() {
             return Err(ConfigError::AlreadySet("return value configuration"));
@@ -55,6 +131,27 @@ impl ConfigBuilder {
         self.output_ret_value = Some(output_ret_value);
         Ok(())
     }
+    /// Builds the final configuration from the builder.
+    /// 
+    /// # Returns
+    /// 
+    /// Returns `Ok(Config)` with the built configuration, or `ConfigError::MissingFunction` 
+    /// if required function fields are missing
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// use funlog::config_builder::ConfigBuilder;
+    /// use syn::{parse_quote, ItemFn};
+    /// use funlog::generics_item_fn::GenericsFn;
+    /// 
+    /// let func: ItemFn = parse_quote! {
+    ///     fn test_func(x: i32) -> i32 { x + 1 }
+    /// };
+    /// let mut builder = ConfigBuilder::default();
+    /// builder.set_function_fields(GenericsFn::from(func));
+    /// assert!(builder.build().is_ok());
+    /// ```
     pub fn build(self) -> Result<Config, ConfigError> {
         let func_vis = self.func_vis.ok_or(ConfigError::MissingFunction)?;
         let func_block = self.func_block.ok_or(ConfigError::MissingFunction)?;
@@ -82,6 +179,31 @@ impl ConfigBuilder {
         })
     }
 
+    /// Creates a ConfigBuilder from metadata and function information.
+    /// 
+    /// # Arguments
+    /// 
+    /// * `meta_list` - Punctuated list of metadata from the macro attributes
+    /// * `func` - Generic function information extracted from the ItemFn
+    /// 
+    /// # Returns
+    /// 
+    /// Returns `Ok(ConfigBuilder)` on success, or `ConfigError` if parsing fails
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// use funlog::config_builder::ConfigBuilder;
+    /// use syn::{parse_quote, ItemFn, Meta, punctuated::Punctuated, token::Comma};
+    /// use funlog::generics_item_fn::GenericsFn;
+    /// 
+    /// let func: ItemFn = parse_quote! {
+    ///     fn test_func(x: i32) -> i32 { x + 1 }
+    /// };
+    /// let meta_list: Punctuated<Meta, Comma> = Punctuated::new();
+    /// let result = ConfigBuilder::from(meta_list, GenericsFn::from(func));
+    /// assert!(result.is_ok());
+    /// ```
     pub fn from(meta_list: Punctuated<Meta, Comma>, func: GenericsFn) -> Result<Self, ConfigError> {
         let mut builder = ConfigBuilder::default();
         builder.set_function_fields(func);
@@ -89,6 +211,11 @@ impl ConfigBuilder {
         Ok(builder)
     }
 
+    /// Sets the function-related fields from the GenericsFn.
+    /// 
+    /// # Arguments
+    /// 
+    /// * `func` - The generic function information to extract fields from
     fn set_function_fields(&mut self, func: GenericsFn) {
         self.func_vis = Some(func.vis);
         self.func_block = Some(func.block);
@@ -99,6 +226,11 @@ impl ConfigBuilder {
         self.func_return_type = Some(func_decl.output);
     }
 
+    /// Extracts parameter identifiers from function arguments.
+    /// 
+    /// # Arguments
+    /// 
+    /// * `inputs` - The function arguments to extract parameter names from
     fn set_parameters(&mut self, inputs: &Punctuated<FnArg, Comma>) {
         for input in inputs.iter().filter_map(|arg| match arg {
             FnArg::Typed(PatType { pat, .. }) => Some(pat),
@@ -109,6 +241,15 @@ impl ConfigBuilder {
             }
         }
     }
+    /// Parses the metadata list from macro attributes and configures the builder.
+    /// 
+    /// # Arguments
+    /// 
+    /// * `meta_list` - The punctuated list of metadata to parse
+    /// 
+    /// # Returns
+    /// 
+    /// Returns `Ok(())` on success, or various `ConfigError` types for different parsing failures
     fn parse_meta_list(&mut self, meta_list: Punctuated<Meta, Comma>) -> Result<(), ConfigError> {
         // Check for conflicting parameter configurations
         let mut param_configs = Vec::new();
@@ -247,7 +388,25 @@ impl ConfigBuilder {
         Ok(())
     }
     
-    /// Provide suggestions for misspelled attributes
+    /// Provides suggestions for misspelled attributes using similarity matching.
+    /// 
+    /// # Arguments
+    /// 
+    /// * `input` - The input attribute string to find suggestions for
+    /// 
+    /// # Returns
+    /// 
+    /// Returns `Some(String)` with a suggested attribute, or `None` if no similar attribute found
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// use funlog::config_builder::ConfigBuilder;
+    /// 
+    /// let builder = ConfigBuilder::default();
+    /// assert_eq!(builder.suggest_similar_attribute("debg"), Some("debug".to_string()));
+    /// assert_eq!(builder.suggest_similar_attribute("xyz"), None);
+    /// ```
     fn suggest_similar_attribute(&self, input: &str) -> Option<String> {
         let valid_attributes = [
             "all", "none", "print", "trace", "debug", "info", "warn", "error",
@@ -264,7 +423,16 @@ impl ConfigBuilder {
         None
     }
     
-    /// Simple string similarity check
+    /// Performs a simple string similarity check using substring matching and edit distance.
+    /// 
+    /// # Arguments
+    /// 
+    /// * `a` - First string to compare
+    /// * `b` - Second string to compare
+    /// 
+    /// # Returns
+    /// 
+    /// Returns `true` if strings are considered similar, `false` otherwise
     fn is_similar(&self, a: &str, b: &str) -> bool {
         let a_lower = a.to_lowercase();
         let b_lower = b.to_lowercase();
@@ -278,7 +446,26 @@ impl ConfigBuilder {
         self.levenshtein_distance(&a_lower, &b_lower) <= 2
     }
     
-    /// Calculate edit distance
+    /// Calculates the Levenshtein edit distance between two strings.
+    /// 
+    /// # Arguments
+    /// 
+    /// * `a` - First string
+    /// * `b` - Second string
+    /// 
+    /// # Returns
+    /// 
+    /// Returns the minimum number of single-character edits required to transform one string into another
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// use funlog::config_builder::ConfigBuilder;
+    /// 
+    /// let builder = ConfigBuilder::default();
+    /// assert_eq!(builder.levenshtein_distance("debug", "debg"), 1);
+    /// assert_eq!(builder.levenshtein_distance("hello", "world"), 4);
+    /// ```
     fn levenshtein_distance(&self, a: &str, b: &str) -> usize {
         let a_chars: Vec<char> = a.chars().collect();
         let b_chars: Vec<char> = b.chars().collect();
@@ -311,5 +498,239 @@ impl ConfigBuilder {
         }
         
         matrix[a_len][b_len]
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use syn::{parse_quote, ItemFn};
+
+    fn create_test_function() -> GenericsFn {
+        let func: ItemFn = parse_quote! {
+            pub fn test_func(x: i32, y: String) -> i32 {
+                x + 1
+            }
+        };
+        GenericsFn::from(func)
+    }
+
+    #[test]
+    fn test_param_config() {
+        let mut builder = ConfigBuilder::default();
+        
+        // Test setting parameter config
+        assert!(builder.param_config(ParameterEnum::AllParameters).is_ok());
+        assert!(matches!(builder.param_config, Some(ParameterEnum::AllParameters)));
+        
+        // Test overwriting (should be allowed)
+        assert!(builder.param_config(ParameterEnum::NoneParameter).is_ok());
+        assert!(matches!(builder.param_config, Some(ParameterEnum::NoneParameter)));
+    }
+
+    #[test]
+    fn test_output_type() {
+        let mut builder = ConfigBuilder::default();
+        
+        // Test setting output type
+        assert!(builder.output_type(OutputType::Debug).is_ok());
+        assert!(matches!(builder.output_type, Some(OutputType::Debug)));
+        
+        // Test overwriting (should be allowed)
+        assert!(builder.output_type(OutputType::Info).is_ok());
+        assert!(matches!(builder.output_type, Some(OutputType::Info)));
+    }
+
+    #[test]
+    fn test_output_position() {
+        let mut builder = ConfigBuilder::default();
+        
+        // Test setting output position
+        assert!(builder.output_position(OutputPosition::OnStart).is_ok());
+        assert!(matches!(builder.output_position, Some(OutputPosition::OnStart)));
+        
+        // Test overwriting (should be allowed)
+        assert!(builder.output_position(OutputPosition::OnEnd).is_ok());
+        assert!(matches!(builder.output_position, Some(OutputPosition::OnEnd)));
+    }
+
+    #[test]
+    fn test_output_ret_value() {
+        let mut builder = ConfigBuilder::default();
+        
+        // Test setting return value config
+        assert!(builder.output_ret_value(true).is_ok());
+        assert_eq!(builder.output_ret_value, Some(true));
+        
+        // Test setting again should fail
+        let result = builder.output_ret_value(false);
+        assert!(result.is_err());
+        assert!(matches!(result.unwrap_err(), ConfigError::AlreadySet(_)));
+    }
+
+    #[test]
+    fn test_build_success() {
+        let mut builder = ConfigBuilder::default();
+        let func = create_test_function();
+        builder.set_function_fields(func);
+        
+        let config = builder.build();
+        assert!(config.is_ok());
+        
+        let config = config.unwrap();
+        assert_eq!(config.func_name.to_string(), "test_func");
+        assert_eq!(config.func_params_for_invoke.len(), 2);
+    }
+
+    #[test]
+    fn test_build_missing_function() {
+        let builder = ConfigBuilder::default();
+        
+        let result = builder.build();
+        assert!(result.is_err());
+        assert!(matches!(result.unwrap_err(), ConfigError::MissingFunction));
+    }
+
+    #[test]
+    fn test_from_success() {
+        let func = create_test_function();
+        let meta_list: Punctuated<Meta, Comma> = Punctuated::new();
+        
+        let result = ConfigBuilder::from(meta_list, func);
+        assert!(result.is_ok());
+        
+        let builder = result.unwrap();
+        assert!(builder.func_name.is_some());
+        assert_eq!(builder.func_params_for_invoke.len(), 2);
+    }
+
+    #[test]
+    fn test_set_function_fields() {
+        let mut builder = ConfigBuilder::default();
+        let func = create_test_function();
+        
+        builder.set_function_fields(func);
+        
+        assert!(builder.func_name.is_some());
+        assert_eq!(builder.func_name.as_ref().unwrap().to_string(), "test_func");
+        assert_eq!(builder.func_params_for_invoke.len(), 2);
+        assert_eq!(builder.func_params_for_invoke[0].to_string(), "x");
+        assert_eq!(builder.func_params_for_invoke[1].to_string(), "y");
+    }
+
+    #[test]
+    fn test_set_parameters() {
+        let mut builder = ConfigBuilder::default();
+        let func: ItemFn = parse_quote! {
+            fn test(a: i32, b: String, c: bool) {}
+        };
+        
+        builder.set_parameters(&func.sig.inputs);
+        
+        assert_eq!(builder.func_params_for_invoke.len(), 3);
+        assert_eq!(builder.func_params_for_invoke[0].to_string(), "a");
+        assert_eq!(builder.func_params_for_invoke[1].to_string(), "b");
+        assert_eq!(builder.func_params_for_invoke[2].to_string(), "c");
+    }
+
+    #[test]
+    fn test_suggest_similar_attribute() {
+        let builder = ConfigBuilder::default();
+        
+        // Test exact matches
+        assert_eq!(builder.suggest_similar_attribute("debug"), Some("debug".to_string()));
+        
+        // Test similar matches
+        assert_eq!(builder.suggest_similar_attribute("debg"), Some("debug".to_string()));
+        assert_eq!(builder.suggest_similar_attribute("infoo"), Some("info".to_string()));
+        assert_eq!(builder.suggest_similar_attribute("al"), Some("all".to_string()));
+        
+        // Test no matches
+        assert_eq!(builder.suggest_similar_attribute("xyz"), None);
+        assert_eq!(builder.suggest_similar_attribute("completely_different"), None);
+    }
+
+    #[test]
+    fn test_is_similar() {
+        let builder = ConfigBuilder::default();
+        
+        // Test substring matching
+        assert!(builder.is_similar("debug", "debug"));
+        assert!(builder.is_similar("debug", "deb"));
+        assert!(builder.is_similar("info", "inf"));
+        
+        // Test edit distance
+        assert!(builder.is_similar("debug", "debg"));
+        assert!(builder.is_similar("trace", "trac"));
+        
+        // Test case insensitive
+        assert!(builder.is_similar("DEBUG", "debug"));
+        assert!(builder.is_similar("Info", "info"));
+        
+        // Test not similar
+        assert!(!builder.is_similar("debug", "xyz"));
+        assert!(!builder.is_similar("completely", "different"));
+    }
+
+    #[test]
+    fn test_levenshtein_distance() {
+        let builder = ConfigBuilder::default();
+        
+        // Test identical strings
+        assert_eq!(builder.levenshtein_distance("hello", "hello"), 0);
+        
+        // Test single character differences
+        assert_eq!(builder.levenshtein_distance("debug", "debg"), 1);
+        assert_eq!(builder.levenshtein_distance("info", "infoo"), 1);
+        
+        // Test multiple character differences
+        assert_eq!(builder.levenshtein_distance("hello", "world"), 4);
+        
+        // Test empty strings
+        assert_eq!(builder.levenshtein_distance("", "hello"), 5);
+        assert_eq!(builder.levenshtein_distance("hello", ""), 5);
+        assert_eq!(builder.levenshtein_distance("", ""), 0);
+    }
+
+    #[test]
+    fn test_parse_meta_list_conflicting_params() {
+        let mut builder = ConfigBuilder::default();
+        let func = create_test_function();
+        builder.set_function_fields(func);
+        
+        // Create conflicting parameter configurations
+        let meta_list: Punctuated<Meta, Comma> = parse_quote! { all, none };
+        
+        let result = builder.parse_meta_list(meta_list);
+        assert!(result.is_err());
+        assert!(matches!(result.unwrap_err(), ConfigError::ConflictingOptions { .. }));
+    }
+
+    #[test]
+    fn test_parse_meta_list_conflicting_log_levels() {
+        let mut builder = ConfigBuilder::default();
+        let func = create_test_function();
+        builder.set_function_fields(func);
+        
+        // Create conflicting log level configurations
+        let meta_list: Punctuated<Meta, Comma> = parse_quote! { debug, info };
+        
+        let result = builder.parse_meta_list(meta_list);
+        assert!(result.is_err());
+        assert!(matches!(result.unwrap_err(), ConfigError::ConflictingOptions { .. }));
+    }
+
+    #[test]
+    fn test_parse_meta_list_invalid_attribute() {
+        let mut builder = ConfigBuilder::default();
+        let func = create_test_function();
+        builder.set_function_fields(func);
+        
+        // Create invalid attribute
+        let meta_list: Punctuated<Meta, Comma> = parse_quote! { invalid_attr };
+        
+        let result = builder.parse_meta_list(meta_list);
+        assert!(result.is_err());
+        assert!(matches!(result.unwrap_err(), ConfigError::InvalidAttribute { .. }));
     }
 }
