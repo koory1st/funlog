@@ -3,16 +3,16 @@ use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
 
 /// Represents the generated output code components for a function with logging.
-/// 
+///
 /// This struct contains all the TokenStream components needed to generate
 /// the final function with logging capabilities.
-/// 
+///
 /// # Examples
-/// 
+///
 /// ```
 /// use funlog::output::Output;
 /// use quote::quote;
-/// 
+///
 /// let output = Output {
 ///     inner_func: quote! { fn __test__() {} },
 ///     func_declare_start: quote! { fn test() },
@@ -39,25 +39,25 @@ pub struct Output {
 
 impl From<Output> for TokenStream {
     /// Converts the Output struct into a final TokenStream for the macro.
-    /// 
+    ///
     /// This method combines all the output components into a single TokenStream
     /// that represents the complete function with logging.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `val` - The Output struct to convert
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// Returns a TokenStream containing the complete generated code
-    /// 
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```
     /// use funlog::output::Output;
     /// use proc_macro::TokenStream;
     /// use quote::quote;
-    /// 
+    ///
     /// let output = Output {
     ///     inner_func: quote! { fn __test__() {} },
     ///     func_declare_start: quote! { fn test() },
@@ -105,7 +105,7 @@ mod tests {
             func_output_end: quote! { println!("end"); },
             func_declare_end: quote! { output },
         };
-        
+
         // Test that all fields are properly set
         assert!(!output.inner_func.is_empty());
         assert!(!output.func_declare_start.is_empty());
@@ -125,7 +125,7 @@ mod tests {
             func_output_end: quote! { println!("exiting test"); },
             func_declare_end: quote! { output },
         };
-        
+
         // We can't convert to TokenStream in unit tests, but we can verify
         // that the conversion method exists and the struct is properly formed
         let _: Output = output;
@@ -142,7 +142,7 @@ mod tests {
             func_output_end: quote! {},
             func_declare_end: quote! { output },
         };
-        
+
         // Verify that empty components are handled properly
         assert!(output.func_output_start.is_empty());
         assert!(output.func_output_end.is_empty());
@@ -152,28 +152,28 @@ mod tests {
     #[test]
     fn test_output_with_complex_logging() {
         let output = Output {
-            inner_func: quote! { 
+            inner_func: quote! {
                 fn __complex_func__(x: i32, y: String) -> Result<i32, String> {
                     if x > 0 { Ok(x) } else { Err(y) }
                 }
             },
-            func_declare_start: quote! { 
-                fn complex_func(x: i32, y: String) -> Result<i32, String> 
+            func_declare_start: quote! {
+                fn complex_func(x: i32, y: String) -> Result<i32, String>
             },
-            func_output_start: quote! { 
-                log::debug!("complex_func [in ]: x:{}, y:{}", format!("{:?}", x), format!("{:?}", y)); 
+            func_output_start: quote! {
+                log::debug!("complex_func [in ]: x:{}, y:{}", format!("{:?}", x), format!("{:?}", y));
             },
-            func_declare_body: quote! { 
+            func_declare_body: quote! {
                 let __x_value__ = format!("{:?}", x);
                 let __y_value__ = format!("{:?}", y);
-                let output = __complex_func__(x, y); 
+                let output = __complex_func__(x, y);
             },
-            func_output_end: quote! { 
-                log::debug!("complex_func [out]: return:{}", format!("{:?}", output)); 
+            func_output_end: quote! {
+                log::debug!("complex_func [out]: return:{}", format!("{:?}", output));
             },
             func_declare_end: quote! { output },
         };
-        
+
         // Verify complex function components are properly set
         assert!(!output.inner_func.is_empty());
         assert!(!output.func_declare_start.is_empty());
@@ -193,7 +193,7 @@ mod tests {
             func_output_end: quote! { println!("end"); },
             func_declare_end: quote! { output },
         };
-        
+
         // Verify the structure has all expected components
         // We can't convert to TokenStream in unit tests, but we can verify
         // that all components are present and non-empty where expected

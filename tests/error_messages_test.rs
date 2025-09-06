@@ -38,7 +38,7 @@ mod error_message_tests {
     #[test]
     fn test_valid_configurations() {
         // 这些是正确的配置，应该能正常编译
-        
+
         #[funlog(debug)]
         fn valid_simple() {}
 
@@ -49,7 +49,9 @@ mod error_message_tests {
         fn valid_with_specific_params(a: i32, b: i32) {}
 
         #[funlog(error, onStart, retVal)]
-        fn valid_complex() -> i32 { 42 }
+        fn valid_complex() -> i32 {
+            42
+        }
 
         // 调用函数以避免未使用警告
         valid_simple();

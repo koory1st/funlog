@@ -8,19 +8,21 @@ mod tests {
     #[test]
     fn test_valid_usage() {
         // 这些是正确的用法，应该能正常工作
-        
+
         #[funlog(debug)]
         fn simple_debug() {}
-        
+
         #[funlog(info, all)]
         fn with_all_params(a: i32, b: i32) {}
-        
+
         #[funlog(warn, params(name))]
         fn with_specific_param(name: &str, age: u32) {}
-        
+
         #[funlog(error, onStart, retVal)]
-        fn with_return_value() -> i32 { 42 }
-        
+        fn with_return_value() -> i32 {
+            42
+        }
+
         // 调用函数
         simple_debug();
         with_all_params(1, 2);
@@ -37,16 +39,16 @@ mod tests {
     fn test_duplicate_log_levels() {
         #[funlog(debug, info)]  // 应该显示冲突错误
         fn duplicate_levels() {}
-        
+
         duplicate_levels();
     }
 
     // 测试 2: 无效的参数名
-    #[test] 
+    #[test]
     fn test_invalid_parameter() {
         #[funlog(params(nonexistent))]  // 应该显示参数不存在错误
         fn invalid_param(existing: i32) {}
-        
+
         invalid_param(42);
     }
 
@@ -55,13 +57,13 @@ mod tests {
     fn test_spelling_errors() {
         #[funlog(debgu)]  // debug 的拼写错误，应该提供建议
         fn typo_debug() {}
-        
-        #[funlog(prnit)]  // print 的拼写错误，应该提供建议  
+
+        #[funlog(prnit)]  // print 的拼写错误，应该提供建议
         fn typo_print() {}
-        
+
         #[funlog(onStrat)]  // onStart 的拼写错误，应该提供建议
         fn typo_position() {}
-        
+
         typo_debug();
         typo_print();
         typo_position();
@@ -72,7 +74,7 @@ mod tests {
     fn test_parameter_conflicts() {
         #[funlog(all, none)]  // 应该显示参数配置冲突
         fn param_conflict(a: i32) {}
-        
+
         param_conflict(1);
     }
 
@@ -81,7 +83,7 @@ mod tests {
     fn test_position_conflicts() {
         #[funlog(onStart, onEnd)]  // 应该显示位置配置冲突
         fn position_conflict() {}
-        
+
         position_conflict();
     }
 
@@ -90,7 +92,7 @@ mod tests {
     fn test_syntax_errors() {
         #[funlog(param(a))]  // params 写成 param，应该提供建议
         fn syntax_error(a: i32) {}
-        
+
         syntax_error(1);
     }
     */

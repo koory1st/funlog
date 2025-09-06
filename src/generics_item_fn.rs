@@ -1,16 +1,16 @@
 use syn::{Attribute, Block, ItemFn, Signature, Visibility};
 
 /// A wrapper struct for function information extracted from syn::ItemFn.
-/// 
+///
 /// This struct provides a convenient way to work with function components
 /// needed for the funlog macro processing.
-/// 
+///
 /// # Examples
-/// 
+///
 /// ```
 /// use syn::{parse_quote, ItemFn};
 /// use funlog::generics_item_fn::GenericsFn;
-/// 
+///
 /// let func: ItemFn = parse_quote! {
 ///     pub fn example(x: i32) -> i32 { x + 1 }
 /// };
@@ -30,21 +30,21 @@ pub struct GenericsFn {
 
 impl From<ItemFn> for GenericsFn {
     /// Converts a syn::ItemFn into a GenericsFn.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `item` - The ItemFn to convert
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// Returns a GenericsFn with all the function components extracted
-    /// 
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```
     /// use syn::{parse_quote, ItemFn};
     /// use funlog::generics_item_fn::GenericsFn;
-    /// 
+    ///
     /// let func: ItemFn = parse_quote! {
     ///     pub fn test_func(x: i32) -> i32 { x + 1 }
     /// };
@@ -73,9 +73,9 @@ mod tests {
                 x + 1
             }
         };
-        
+
         let generics_fn = GenericsFn::from(func);
-        
+
         // Test that all fields are properly extracted
         assert_eq!(generics_fn.sig.ident.to_string(), "test_func");
         assert_eq!(generics_fn.sig.inputs.len(), 2);
@@ -89,9 +89,9 @@ mod tests {
                 println!("private");
             }
         };
-        
+
         let generics_fn = GenericsFn::from(func);
-        
+
         assert_eq!(generics_fn.sig.ident.to_string(), "private_func");
         assert_eq!(generics_fn.sig.inputs.len(), 0);
         assert!(matches!(generics_fn.vis, Visibility::Inherited));
@@ -106,9 +106,9 @@ mod tests {
                 x * 2
             }
         };
-        
+
         let generics_fn = GenericsFn::from(func);
-        
+
         assert_eq!(generics_fn.sig.ident.to_string(), "attributed_func");
         assert_eq!(generics_fn.attrs.len(), 2);
     }
@@ -120,16 +120,16 @@ mod tests {
                 x: T,
                 y: &str,
                 z: Option<i32>
-            ) -> Result<T, String> 
-            where 
-                T: std::fmt::Debug 
+            ) -> Result<T, String>
+            where
+                T: std::fmt::Debug
             {
                 Ok(x)
             }
         };
-        
+
         let generics_fn = GenericsFn::from(func);
-        
+
         assert_eq!(generics_fn.sig.ident.to_string(), "complex_func");
         assert_eq!(generics_fn.sig.inputs.len(), 3);
         assert!(generics_fn.sig.asyncness.is_some());
@@ -143,9 +143,9 @@ mod tests {
                 println!("{}", x);
             }
         };
-        
+
         let generics_fn = GenericsFn::from(func);
-        
+
         assert_eq!(generics_fn.sig.ident.to_string(), "void_func");
         assert!(matches!(generics_fn.sig.output, syn::ReturnType::Default));
     }
@@ -157,10 +157,13 @@ mod tests {
                 "hello".to_string()
             }
         };
-        
+
         let generics_fn = GenericsFn::from(func);
-        
+
         assert_eq!(generics_fn.sig.ident.to_string(), "returning_func");
-        assert!(matches!(generics_fn.sig.output, syn::ReturnType::Type(_, _)));
+        assert!(matches!(
+            generics_fn.sig.output,
+            syn::ReturnType::Type(_, _)
+        ));
     }
 }

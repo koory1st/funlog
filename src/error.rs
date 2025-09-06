@@ -1,15 +1,15 @@
 use std::fmt;
 
 /// Represents various configuration errors that can occur during macro processing.
-/// 
+///
 /// This enum covers all possible error conditions that can arise when parsing
 /// and validating the funlog macro attributes and function information.
-/// 
+///
 /// # Examples
-/// 
+///
 /// ```
 /// use funlog::error::ConfigError;
-/// 
+///
 /// let error = ConfigError::AlreadySet("return value configuration");
 /// println!("{}", error);
 /// ```
@@ -18,9 +18,15 @@ pub enum ConfigError {
     /// A configuration option has already been set
     AlreadySet(&'static str),
     /// An invalid parameter was specified
-    InvalidParameter { param: String, available: Vec<String> },
+    InvalidParameter {
+        param: String,
+        available: Vec<String>,
+    },
     /// An invalid attribute was used
-    InvalidAttribute { attr: String, suggestion: Option<String> },
+    InvalidAttribute {
+        attr: String,
+        suggestion: Option<String>,
+    },
     /// A parsing error occurred
     ParseError(String),
     /// Conflicting configuration options were specified
@@ -33,20 +39,20 @@ pub enum ConfigError {
 
 impl fmt::Display for ConfigError {
     /// Formats the error with helpful messages and suggestions.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `f` - The formatter to write to
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// Returns `fmt::Result` indicating success or failure of formatting
-    /// 
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```
     /// use funlog::error::ConfigError;
-    /// 
+    ///
     /// let error = ConfigError::AlreadySet("test");
     /// let formatted = format!("{}", error);
     /// assert!(formatted.contains("already been set"));
@@ -54,45 +60,68 @@ impl fmt::Display for ConfigError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             ConfigError::AlreadySet(field) => {
-                write!(f, "funlog configuration error: '{field}' option has already been set\n")?;
+                writeln!(
+                    f,
+                    "funlog configuration error: '{field}' option has already been set"
+                )?;
                 write!(f, "💡 Hint: Each configuration option can only be set once, please check for duplicate configurations")
-            },
+            }
             ConfigError::InvalidParameter { param, available } => {
-                write!(f, "funlog parameter error: parameter '{param}' does not exist\n")?;
+                writeln!(
+                    f,
+                    "funlog parameter error: parameter '{param}' does not exist"
+                )?;
                 if available.is_empty() {
                     write!(f, "💡 Hint: This function has no parameters, please use 'none' or remove the params() configuration")
                 } else {
-                    write!(f, "💡 Hint: Available parameters are: {}\n", available.join(", "))?;
-                    write!(f, "   Correct usage: #[funlog(params({}))]", available.join(", "))
+                    writeln!(
+                        f,
+                        "💡 Hint: Available parameters are: {}",
+                        available.join(", ")
+                    )?;
+                    write!(
+                        f,
+                        "   Correct usage: #[funlog(params({}))]",
+                        available.join(", ")
+                    )
                 }
-            },
+            }
             ConfigError::InvalidAttribute { attr, suggestion } => {
-                write!(f, "funlog configuration error: unknown configuration option '{attr}'\n")?;
+                writeln!(
+                    f,
+                    "funlog configuration error: unknown configuration option '{attr}'"
+                )?;
                 if let Some(suggestion) = suggestion {
-                    write!(f, "💡 Hint: Did you mean '{suggestion}'?\n")?;
+                    writeln!(f, "💡 Hint: Did you mean '{suggestion}'?")?;
                 }
-                write!(f, "📖 Available configuration options:\n")?;
-                write!(f, "   Log levels: print, trace, debug, info, warn, error\n")?;
-                write!(f, "   Parameter control: all, none, params(parameter_names...)\n")?;
-                write!(f, "   Position control: onStart, onEnd, onStartEnd\n")?;
+                writeln!(f, "📖 Available configuration options:")?;
+                writeln!(f, "   Log levels: print, trace, debug, info, warn, error")?;
+                writeln!(
+                    f,
+                    "   Parameter control: all, none, params(parameter_names...)"
+                )?;
+                writeln!(f, "   Position control: onStart, onEnd, onStartEnd")?;
                 write!(f, "   Return value: retVal")
-            },
+            }
             ConfigError::ParseError(msg) => {
-                write!(f, "funlog parse error: {msg}\n")?;
+                writeln!(f, "funlog parse error: {msg}")?;
                 write!(f, "💡 Hint: Please check if the macro syntax is correct, example: #[funlog(debug, all)]")
-            },
+            }
             ConfigError::ConflictingOptions { option1, option2 } => {
-                write!(f, "funlog configuration conflict: '{option1}' and '{option2}' cannot be used together\n")?;
+                writeln!(f, "funlog configuration conflict: '{option1}' and '{option2}' cannot be used together")?;
                 write!(f, "💡 Hint: Please choose one of the options")
-            },
+            }
             ConfigError::MissingFunction => {
-                write!(f, "funlog error: can only be used on functions\n")?;
+                writeln!(f, "funlog error: can only be used on functions")?;
                 write!(f, "💡 Hint: funlog macro can only be applied to function definitions, not other items")
-            },
+            }
             ConfigError::InvalidParameterSyntax { param, expected } => {
-                write!(f, "funlog parameter syntax error: '{param}' format is incorrect\n")?;
+                writeln!(
+                    f,
+                    "funlog parameter syntax error: '{param}' format is incorrect"
+                )?;
                 write!(f, "💡 Hint: Expected format is {expected}")
-            },
+            }
         }
     }
 }
@@ -101,21 +130,21 @@ impl std::error::Error for ConfigError {}
 
 impl From<ConfigError> for syn::Error {
     /// Converts a ConfigError into a syn::Error for use in procedural macros.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `err` - The ConfigError to convert
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// Returns a syn::Error with the error message and call site span
-    /// 
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```
     /// use funlog::error::ConfigError;
     /// use syn::Error;
-    /// 
+    ///
     /// let config_error = ConfigError::MissingFunction;
     /// let syn_error: Error = config_error.into();
     /// ```
@@ -245,11 +274,11 @@ mod tests {
     fn test_clone_and_debug() {
         let error = ConfigError::AlreadySet("test");
         let cloned = error.clone();
-        
+
         // Test Debug implementation
         let debug_str = format!("{:?}", error);
         assert!(debug_str.contains("AlreadySet"));
-        
+
         // Test that clone works
         assert!(matches!(cloned, ConfigError::AlreadySet("test")));
     }

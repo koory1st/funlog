@@ -59,26 +59,26 @@ fn test_underscore_attribute() {
 // }
 
 // 错误示例 9: 非常相似但错误的属性
-#[funlog(retValue)]  // retVal 的变体
+#[funlog(retValue)] // retVal 的变体
 fn test_similar_but_wrong() -> i32 {
     println!("非常相似但错误的属性");
     42
 }
 
 // 错误示例 10: 使用了复数形式
-#[funlog(errors)]  // error 的复数
+#[funlog(errors)] // error 的复数
 fn test_plural_form() {
     println!("复数形式的属性");
 }
 
 // 错误示例 11: 缺少字母的属性
-#[funlog(deb)]  // debug 缺少字母
+#[funlog(deb)] // debug 缺少字母
 fn test_missing_letters() {
     println!("缺少字母的属性");
 }
 
 // 错误示例 12: 多余字母的属性
-#[funlog(debugg)]  // debug 多了字母
+#[funlog(debugg)] // debug 多了字母
 fn test_extra_letters() {
     println!("多余字母的属性");
 }
