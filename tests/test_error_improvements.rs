@@ -13,10 +13,12 @@ mod tests {
         fn simple_debug() {}
 
         #[funlog(info, all)]
-        fn with_all_params(a: i32, b: i32) {}
+        fn with_all_params(_a: i32, _b: i32) {}
 
         #[funlog(warn, params(name))]
-        fn with_specific_param(name: &str, age: u32) {}
+        fn with_specific_param(name: &str, _age: u32) {
+            let _ = name; // Used by funlog macro
+        }
 
         #[funlog(error, onStart, retVal)]
         fn with_return_value() -> i32 {
@@ -100,6 +102,7 @@ mod tests {
 
 // 用于手动测试的函数
 #[allow(dead_code)]
+#[allow(clippy::items_after_test_module)]
 fn manual_test_examples() {
     println!("=== Funlog 错误处理改进演示 ===");
     println!("要查看错误信息，请取消注释测试用例并运行 cargo test");

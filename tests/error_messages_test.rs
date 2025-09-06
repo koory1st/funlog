@@ -43,10 +43,12 @@ mod error_message_tests {
         fn valid_simple() {}
 
         #[funlog(info, all)]
-        fn valid_with_all_params(a: i32, b: i32) {}
+        fn valid_with_all_params(_a: i32, _b: i32) {}
 
         #[funlog(warn, params(a))]
-        fn valid_with_specific_params(a: i32, b: i32) {}
+        fn valid_with_specific_params(a: i32, _b: i32) {
+            let _ = a; // Used by funlog macro
+        }
 
         #[funlog(error, onStart, retVal)]
         fn valid_complex() -> i32 {

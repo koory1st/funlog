@@ -177,10 +177,10 @@ mod tests {
         // This test documents the expected behavior
         if is_debug {
             // In debug builds, funlog should process the function
-            assert!(true, "Debug build - funlog should process functions");
+            // Note: This is a documentation test, not an assertion
         } else {
             // In release builds, funlog should return original function
-            assert!(true, "Release build - funlog should pass through functions");
+            // Note: This is a documentation test, not an assertion
         }
     }
 

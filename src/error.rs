@@ -160,7 +160,7 @@ mod tests {
     #[test]
     fn test_already_set_error() {
         let error = ConfigError::AlreadySet("test field");
-        let message = format!("{}", error);
+        let message = format!("{error}");
         assert!(message.contains("test field"));
         assert!(message.contains("already been set"));
         assert!(message.contains("💡 Hint"));
@@ -172,7 +172,7 @@ mod tests {
             param: "invalid_param".to_string(),
             available: vec!["x".to_string(), "y".to_string()],
         };
-        let message = format!("{}", error);
+        let message = format!("{error}");
         assert!(message.contains("invalid_param"));
         assert!(message.contains("x, y"));
         assert!(message.contains("💡 Hint"));
@@ -184,7 +184,7 @@ mod tests {
             param: "invalid_param".to_string(),
             available: vec![],
         };
-        let message = format!("{}", error);
+        let message = format!("{error}");
         assert!(message.contains("invalid_param"));
         assert!(message.contains("no parameters"));
         assert!(message.contains("💡 Hint"));
@@ -196,7 +196,7 @@ mod tests {
             attr: "debg".to_string(),
             suggestion: Some("debug".to_string()),
         };
-        let message = format!("{}", error);
+        let message = format!("{error}");
         assert!(message.contains("debg"));
         assert!(message.contains("debug"));
         assert!(message.contains("💡 Hint"));
@@ -209,7 +209,7 @@ mod tests {
             attr: "unknown".to_string(),
             suggestion: None,
         };
-        let message = format!("{}", error);
+        let message = format!("{error}");
         assert!(message.contains("unknown"));
         assert!(message.contains("📖 Available"));
     }
@@ -217,7 +217,7 @@ mod tests {
     #[test]
     fn test_parse_error() {
         let error = ConfigError::ParseError("test parse error".to_string());
-        let message = format!("{}", error);
+        let message = format!("{error}");
         assert!(message.contains("test parse error"));
         assert!(message.contains("💡 Hint"));
     }
@@ -228,7 +228,7 @@ mod tests {
             option1: "debug".to_string(),
             option2: "info".to_string(),
         };
-        let message = format!("{}", error);
+        let message = format!("{error}");
         assert!(message.contains("debug"));
         assert!(message.contains("info"));
         assert!(message.contains("cannot be used together"));
@@ -238,7 +238,7 @@ mod tests {
     #[test]
     fn test_missing_function_error() {
         let error = ConfigError::MissingFunction;
-        let message = format!("{}", error);
+        let message = format!("{error}");
         assert!(message.contains("can only be used on functions"));
         assert!(message.contains("💡 Hint"));
     }
@@ -249,7 +249,7 @@ mod tests {
             param: "bad_syntax".to_string(),
             expected: "param(name)".to_string(),
         };
-        let message = format!("{}", error);
+        let message = format!("{error}");
         assert!(message.contains("bad_syntax"));
         assert!(message.contains("param(name)"));
         assert!(message.contains("💡 Hint"));
@@ -276,7 +276,7 @@ mod tests {
         let cloned = error.clone();
 
         // Test Debug implementation
-        let debug_str = format!("{:?}", error);
+        let debug_str = format!("{error:?}");
         assert!(debug_str.contains("AlreadySet"));
 
         // Test that clone works
