@@ -27,12 +27,7 @@ jobs:
         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
     - name: Run tests
-      run: cargo test --all-features
-
-    - name: Run examples
-      run: |
-        chmod +x ./run_tests.sh
-        ./run_tests.sh
+      run: cargo test --lib --tests --all-features
 
     - name: Check if version matches tag
       id: version

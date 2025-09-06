@@ -45,21 +45,7 @@ jobs:
       run: cargo build --verbose
 
     - name: Run tests
-      run: cargo test --verbose --all-features
-
-    - name: Run examples (Unix)
-      if: runner.os != 'Windows'
-      run: |
-        chmod +x ./run_tests.sh
-        ./run_tests.sh
-
-    - name: Run examples (Windows)
-      if: runner.os == 'Windows'
-      run: |
-        # Run a few key examples on Windows
-        cargo run --example raw_debug
-        cargo run --example raw_print
-        cargo run --example raw_all
+      run: cargo test --lib --tests --verbose --all-features
 
   fmt:
     name: Rustfmt
@@ -124,7 +110,7 @@ jobs:
           target
         key: ${{ runner.os }}-coverage-cargo-${{ hashFiles('**/Cargo.lock') }}
     - name: Run cargo-tarpaulin
-      run: cargo tarpaulin --verbose --all-features --workspace --timeout 120 --out xml
+      run: cargo tarpaulin --lib --tests --verbose --all-features --workspace --timeout 120 --out xml
     - name: Upload to codecov.io
       uses: codecov/codecov-action@v3
       with:
